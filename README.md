@@ -1,0 +1,1 @@
+# Crank.OperationResult
