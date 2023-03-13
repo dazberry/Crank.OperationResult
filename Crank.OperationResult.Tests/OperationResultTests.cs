@@ -57,5 +57,25 @@ namespace Crank.OperationResult.Tests
             Assert.Equal(OperationState.Failure, typedResult.State);
         }
 
+        [Fact]
+        public void GivenAnUnTypedOperationResult_WhenCallingSuccess_ShouldSetStateToSucceed()
+        {
+            //given
+            var untypedResult = OperationResult.Undefined();
+            var typedResult = OperationResult.Undefined<string>();
+            var typedResultWithValue = OperationResult.Undefined<string>();
+
+            //when
+            untypedResult.Success();
+            typedResult.Success();
+            typedResultWithValue.Success("123");
+
+            //then
+            Assert.Equal(OperationState.Success, untypedResult.State);
+            Assert.Equal(OperationState.Success, typedResult.State);
+            Assert.Equal(OperationState.Success, typedResultWithValue.State);
+            Assert.Equal("123", typedResultWithValue.Value);
+        }
+
     }
 }

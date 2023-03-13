@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Crank.OperationResult
 {
@@ -14,6 +15,7 @@ namespace Crank.OperationResult
 
         public static OperationResult Undefined() => new OperationResult();
         public static OperationResult<TType> Undefined<TType>() => new OperationResult<TType>();
+
         public static OperationResult Succeeded() => new OperationResult().Success();
         public static OperationResult<TType> Succeeded<TType>(TType value = default) => new OperationResult<TType>().Success(value);
 
@@ -34,19 +36,25 @@ namespace Crank.OperationResult
             return result;
         }
 
-        public GenericValue SuccessValue { get; protected set; } = _undefinedValue;
-        public GenericValue ErrorValue { get; protected set; } = _undefinedValue;
+        public GenericValue _genericValue = _undefinedValue;
+
+        public GenericValue SuccessValue =>
+            State switch
+            {
+                OperationState.Success => _genericValue,
+                _ => _undefinedValue
+            };
+
+        public GenericValue FailureValue =>
+            State switch
+            {
+                OperationState.Failure => _genericValue,
+                _ => _undefinedValue
+            };
 
         public bool IsUndefined => State == OperationState.Undefined;
         public bool HasSucceeded => State == OperationState.Success;
         public bool HasFailed => State == OperationState.Failure;
-
-        protected OperationResult SetGenericValues(GenericValue successValue, GenericValue errorValue)
-        {
-            SuccessValue = successValue;
-            ErrorValue = errorValue;
-            return this;
-        }
 
         protected OperationResult SetState(OperationState state)
         {
@@ -57,76 +65,113 @@ namespace Crank.OperationResult
         public OperationResult Success() =>
             SetState(OperationState.Success);
 
-        public virtual OperationResult Success<TValue>(TValue value) =>
-            SetGenericValues(SuccessValue.To(value), _undefinedValue)
-            .Success();
+        public OperationResult Success<TSuccessValue>(TSuccessValue successValue)
+        {
+            Success();
+            _genericValue = _genericValue.To(successValue);
+            return this;
+        }
+
+        public OperationResult<TSuccessValue> SuccessAs<TSuccessValue>(TSuccessValue successValue)
+        {
+            Success();
+            _genericValue = _genericValue.To(successValue);
+            return new OperationResult<TSuccessValue>(this);
+        }
+
 
         public OperationResult Fail() =>
             SetState(OperationState.Failure);
 
-        public OperationResult Fail<TErrorValue>(TErrorValue value) =>
-            SetGenericValues(_undefinedValue, ErrorValue.To(value))
-            .Fail();
+        public OperationResult Fail<TErrorValue>(TErrorValue value)
+        {
+            _genericValue = _genericValue.To<TErrorValue>(value);
+            return Fail();
+        }
+
 
         public OperationResult Map(OperationResult operationResult)
-            => operationResult.State switch
-            {
-                OperationState.Success => Success(operationResult.SuccessValue),
-                OperationState.Failure => Fail(operationResult.ErrorValue),
-                _ => this
-            };
+        {
+            if (this.HasFailed)
+                return this;
 
+            State = operationResult.State;
+            _genericValue = operationResult._genericValue;
+            return this;
+        }
+
+        public OperationResult Map(Func<OperationResult> mapAction)
+        {
+            if (!this.HasFailed && mapAction != null)
+                return Map(mapAction.Invoke());
+            return this;
+        }
+
+        public async Task<OperationResult> MapAsync(Func<Task<OperationResult>> mapAction)
+        {
+            if (!this.HasFailed && mapAction != null)
+                return Map(await mapAction.Invoke());
+
+            return this;
+        }
     }
 
     public class OperationResult<TSuccessValue> : OperationResult
     {
-        public OperationResult()
+        public TSuccessValue Value =>
+            base.SuccessValue.TryGetValue<TSuccessValue>(out var successValue)
+                ? successValue
+                : default;
+
+        public OperationResult() { }
+
+        public OperationResult(TSuccessValue value)
         {
-            SuccessValue = new GenericValue<TSuccessValue>(default);
+            _genericValue = new GenericValue<TSuccessValue>(value);
         }
 
-        public override OperationResult Success<TValue>(TValue value)
+        public OperationResult(OperationResult operationResult)
+        {
+            this.State = operationResult.State;
+            this._genericValue = operationResult._genericValue;
+        }
+
+        public new OperationResult<TSuccessValue> Success<TValue>(TValue value)
         {
             if (typeof(TValue) != typeof(TSuccessValue))
                 throw new Exception();
 
             SetState(OperationState.Success);
-            SuccessValue = SuccessValue.To<TValue>(value);
+            _genericValue = _genericValue.To<TValue>(value);
             return this;
         }
 
         public OperationResult<TSuccessValue> Success(TSuccessValue successValue)
         {
             SetState(OperationState.Success);
-            SuccessValue = SuccessValue.To(successValue);
+            _genericValue = _genericValue.To(successValue);
             return this;
         }
-
-        public TSuccessValue Value =>
-            base.SuccessValue.As<TSuccessValue>(out var genericValue)
-                ? genericValue.Value
-                : default;
 
         public OperationResult<TSuccessValue> MapConvert<TNewSuccessValue>(
             OperationResult<TNewSuccessValue> operationResult,
             Func<TNewSuccessValue, TSuccessValue> convertAction)
-
         {
-            if (operationResult.IsUndefined)
+            if (this.HasFailed || operationResult.IsUndefined)
                 return this;
+
+            this.SetState(operationResult.State);
 
             if (operationResult.HasSucceeded)
             {
                 if (convertAction != null)
                 {
-                    return Success(
-                        convertAction.Invoke(operationResult.Value));
+                    operationResult._genericValue.TryGetValue<TNewSuccessValue>(out var newSuccessValue);
+                    return Success(convertAction.Invoke(newSuccessValue));
                 }
                 Success();
-                return this;
             }
 
-            SetGenericValues(_undefinedValue, operationResult.ErrorValue).Fail();
             return this;
         }
     }
