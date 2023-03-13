@@ -38,17 +38,10 @@ namespace Crank.OperationResult
 
         public GenericValue _genericValue = _undefinedValue;
 
-        public GenericValue SuccessValue =>
+        public GenericValue Value =>
             State switch
             {
                 OperationState.Success => _genericValue,
-                _ => _undefinedValue
-            };
-
-        public GenericValue FailureValue =>
-            State switch
-            {
-                OperationState.Failure => _genericValue,
                 _ => _undefinedValue
             };
 
@@ -118,8 +111,8 @@ namespace Crank.OperationResult
 
     public class OperationResult<TSuccessValue> : OperationResult
     {
-        public TSuccessValue Value =>
-            base.SuccessValue.TryGetValue<TSuccessValue>(out var successValue)
+        public new TSuccessValue Value =>
+            base.Value.TryGetValue<TSuccessValue>(out var successValue)
                 ? successValue
                 : default;
 

@@ -52,7 +52,7 @@ namespace Crank.OperationResult.Tests
 
             //when
             var copyOfFirstResult = firstResult.Map(secondResult);
-            var canExtractSuccessValue = copyOfFirstResult.SuccessValue.As<string>(out var successValue);
+            var canExtractSuccessValue = copyOfFirstResult.Value.As<string>(out var successValue);
 
             //then
             Assert.NotEqual(firstResult, secondResult);
