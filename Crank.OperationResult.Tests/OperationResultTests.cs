@@ -1,4 +1,3 @@
-using System;
 using Xunit;
 
 namespace Crank.OperationResult.Tests
@@ -49,12 +48,13 @@ namespace Crank.OperationResult.Tests
         {
             //given
             var untypedResult = OperationResult.Failed();
-            var typedResult = OperationResult.Failed<string>();
-            var typedResultWithValue = OperationResult.Failed<string, string>("123");
+            var typedResult = OperationResult.Undefined<string>().Fail();
+            var typedResultWithValue = OperationResult.Failed<string>("123");
 
             //then
             Assert.Equal(OperationState.Failure, untypedResult.State);
             Assert.Equal(OperationState.Failure, typedResult.State);
+            Assert.Equal(OperationState.Failure, typedResultWithValue.State);
         }
 
         [Fact]
@@ -74,6 +74,26 @@ namespace Crank.OperationResult.Tests
             Assert.Equal(OperationState.Success, untypedResult.State);
             Assert.Equal(OperationState.Success, typedResult.State);
             Assert.Equal(OperationState.Success, typedResultWithValue.State);
+            Assert.Equal("123", typedResultWithValue.Value);
+        }
+
+        [Fact]
+        public void GivenAnUnTypedOperationResult_WhenCallingFail_ShouldSetStateToFailure()
+        {
+            //given
+            var untypedResult = OperationResult.Undefined();
+            var typedResult = OperationResult.Undefined<string>();
+            var typedResultWithValue = OperationResult.Undefined<string>();
+
+            //when
+            untypedResult.Fail();
+            typedResult.Fail();
+            typedResultWithValue.Fail("123");
+
+            //then
+            Assert.Equal(OperationState.Failure, untypedResult.State);
+            Assert.Equal(OperationState.Failure, typedResult.State);
+            Assert.Equal(OperationState.Failure, typedResultWithValue.State);
             Assert.Equal("123", typedResultWithValue.Value);
         }
 

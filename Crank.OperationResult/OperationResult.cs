@@ -20,19 +20,10 @@ namespace Crank.OperationResult
         public static OperationResult<TType> Succeeded<TType>(TType value = default) => new OperationResult<TType>().Success(value);
 
         public static OperationResult Failed() => new OperationResult().Fail();
-        public static OperationResult Failed<TErrorValue>(TErrorValue value) =>
-            new OperationResult().Fail<TErrorValue>(value);
-
-        public static OperationResult<TSuccessValue> Failed<TSuccessValue>()
+        public static OperationResult<TErrorValue> Failed<TErrorValue>(TErrorValue value)
         {
-            var result = new OperationResult<TSuccessValue>();
-            result.Fail();
-            return result;
-        }
-        public static OperationResult<TSuccessValue> Failed<TSuccessValue, TErrorValue>(TErrorValue failureValue)
-        {
-            var result = new OperationResult<TSuccessValue>();
-            result.Fail(failureValue);
+            var result = new OperationResult<TErrorValue>();
+            result.Fail(value);
             return result;
         }
 
@@ -63,13 +54,6 @@ namespace Crank.OperationResult
             Success();
             _genericValue = _genericValue.To(successValue);
             return this;
-        }
-
-        public OperationResult<TSuccessValue> SuccessAs<TSuccessValue>(TSuccessValue successValue)
-        {
-            Success();
-            _genericValue = _genericValue.To(successValue);
-            return new OperationResult<TSuccessValue>(this);
         }
 
 
@@ -112,10 +96,10 @@ namespace Crank.OperationResult
     public class OperationResult<TSuccessValue> : OperationResult
     {
         public new TSuccessValue Value =>
-            base.Value.TryGetValue<TSuccessValue>(out var successValue)
-                ? successValue
+            _genericValue.TryGetValue<TSuccessValue>(out var value)
+                ? value
                 : default;
-
+            
         public OperationResult() { }
 
         public OperationResult(TSuccessValue value)
@@ -127,6 +111,13 @@ namespace Crank.OperationResult
         {
             this.State = operationResult.State;
             this._genericValue = operationResult._genericValue;
+        }
+
+        public new OperationResult Success()
+        {
+            SetState(OperationState.Success);
+            _genericValue = _undefinedValue;
+            return this;
         }
 
         public new OperationResult<TSuccessValue> Success<TValue>(TValue value)
@@ -145,6 +136,21 @@ namespace Crank.OperationResult
             _genericValue = _genericValue.To(successValue);
             return this;
         }
+
+        public new OperationResult Fail()
+        {
+            SetState(OperationState.Failure);
+            _genericValue = _undefinedValue;
+            return this;
+        }
+
+        public OperationResult<TSuccessValue> Fail(TSuccessValue successValue)
+        {
+            SetState(OperationState.Failure);
+            _genericValue = _genericValue.To<TSuccessValue>(successValue);
+            return this;
+        }
+
 
         public OperationResult<TSuccessValue> MapConvert<TNewSuccessValue>(
             OperationResult<TNewSuccessValue> operationResult,

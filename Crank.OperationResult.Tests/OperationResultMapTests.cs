@@ -48,7 +48,7 @@ namespace Crank.OperationResult.Tests
         {
             //given
             var firstResult = OperationResult.Undefined();
-            var secondResult = OperationResult.Undefined().SuccessAs("123");
+            var secondResult = OperationResult.Succeeded<string>("123");
 
             //when
             var copyOfFirstResult = firstResult.Map(secondResult);
