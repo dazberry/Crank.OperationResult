@@ -28,12 +28,12 @@ namespace Crank.OperationResult
         }
 
         protected GenericValue _genericValue = _undefinedValue;
-
         public GenericValue Value => _genericValue;
+        public bool IsValueUndefined => _genericValue == _undefinedValue;
         public bool TryGetValue<TValue>(out TValue value) =>
             _genericValue.TryGetValue<TValue>(out value);
         
-        public bool IsUndefined => State == OperationState.Undefined;
+        public bool IsStateUndefined => State == OperationState.Undefined;
         public bool HasSucceeded => State == OperationState.Success;
         public bool HasFailed => State == OperationState.Failure;
 
@@ -84,7 +84,7 @@ namespace Crank.OperationResult
 
         public OperationResult<TMapType> MapTo<TMapType>(OperationResult<TMapType> operationResult)
         {
-            if (this.HasFailed || operationResult.IsUndefined)
+            if (this.HasFailed || operationResult.IsStateUndefined)
                 return new OperationResult<TMapType>(this);
 
             Copy(operationResult);            
@@ -113,15 +113,9 @@ namespace Crank.OperationResult
             _genericValue.TryGetValue<TExpectedValue>(out var value)
                 ? value
                 : default;
-
-        public bool Is<TValue>() =>
-            _genericValue.Is<TValue>();
-
+        
         public bool As<TValue>(out TValue value) =>
             _genericValue.TryGetValue<TValue>(out value);
-
-        public bool IsValueUndefined => _genericValue == _undefinedValue;
-
 
         public OperationResult() { }
 
@@ -184,7 +178,7 @@ namespace Crank.OperationResult
 
         public new OperationResult<TExpectedValue> Map<TMapType>(OperationResult<TMapType> operationResult)
         {
-            if (this.HasFailed || operationResult.IsUndefined)
+            if (this.HasFailed || operationResult.IsStateUndefined)
                 return this;
 
             if (typeof(TExpectedValue) == typeof(TMapType))
@@ -202,7 +196,7 @@ namespace Crank.OperationResult
             OperationResult<TNewSuccessValue> operationResult,
             Func<TNewSuccessValue, TExpectedValue> convertAction)
         {
-            if (this.HasFailed || operationResult.IsUndefined)
+            if (this.HasFailed || operationResult.IsStateUndefined)
                 return this;
 
             this.SetState(operationResult.State);

@@ -15,13 +15,13 @@ namespace Crank.OperationResult.Tests
 
             //then
             Assert.Equal(OperationState.Undefined, untypedResult.State);
-            Assert.True(untypedResult.IsUndefined);
+            Assert.True(untypedResult.IsStateUndefined);
             Assert.Equal(OperationState.Undefined, typedResult.State);
-            Assert.True(typedResult.IsUndefined);
+            Assert.True(typedResult.IsStateUndefined);
             Assert.Equal(OperationState.Undefined, untypedFromUndefined.State);
-            Assert.True(untypedFromUndefined.IsUndefined);
+            Assert.True(untypedFromUndefined.IsStateUndefined);
             Assert.Equal(OperationState.Undefined, typedFromUndefined.State);
-            Assert.True(typedFromUndefined.IsUndefined);
+            Assert.True(typedFromUndefined.IsStateUndefined);
         }
 
         [Fact]

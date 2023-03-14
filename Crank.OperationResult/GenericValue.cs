@@ -3,9 +3,7 @@
 namespace Crank.OperationResult
 {
     public abstract class GenericValue
-    {
-
-        public abstract bool Is<TType>();
+    {    
         public abstract bool As<TType>(out GenericValue<TType> genericValue);
         public abstract bool TryGetValue<TType>(out TType value);
         public abstract GenericValue<TType> To<TType>(TType value);
@@ -20,9 +18,7 @@ namespace Crank.OperationResult
             genericValue = default;
             return false;
         }
-
-        public override bool Is<TType>() => false;
-
+                      
         public override bool TryGetValue<TType>(out TType value)
         {
             value = default;
@@ -41,9 +37,6 @@ namespace Crank.OperationResult
         {
             Value = value;
         }
-
-        public override bool Is<TType>() =>
-            typeof(TType) == typeof(TValue);
 
         public override bool As<TType>(out GenericValue<TType> genericValue)
         {
@@ -72,9 +65,5 @@ namespace Crank.OperationResult
 
         public override bool IsUndefined => false;
     }
-
-
-
-
 
 }
