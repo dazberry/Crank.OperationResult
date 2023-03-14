@@ -27,15 +27,12 @@ namespace Crank.OperationResult
             return result;
         }
 
-        public GenericValue _genericValue = _undefinedValue;
+        protected GenericValue _genericValue = _undefinedValue;
 
-        public GenericValue Value =>
-            State switch
-            {
-                OperationState.Success => _genericValue,
-                _ => _undefinedValue
-            };
-
+        public GenericValue Value => _genericValue;
+        public bool TryGetValue<TValue>(out TValue value) =>
+            _genericValue.TryGetValue<TValue>(out value);
+        
         public bool IsUndefined => State == OperationState.Undefined;
         public bool HasSucceeded => State == OperationState.Success;
         public bool HasFailed => State == OperationState.Failure;
@@ -44,6 +41,12 @@ namespace Crank.OperationResult
         {
             State = state;
             return this;
+        }
+
+        protected void Copy(OperationResult operationResult)
+        {
+            State = operationResult.State;
+            _genericValue = operationResult._genericValue;            
         }
 
         public OperationResult Success() =>
@@ -56,7 +59,6 @@ namespace Crank.OperationResult
             return this;
         }
 
-
         public OperationResult Fail() =>
             SetState(OperationState.Failure);
 
@@ -66,15 +68,27 @@ namespace Crank.OperationResult
             return Fail();
         }
 
-
         public OperationResult Map(OperationResult operationResult)
         {
             if (this.HasFailed)
                 return this;
 
-            State = operationResult.State;
-            _genericValue = operationResult._genericValue;
+            Copy(operationResult);            
             return this;
+        }
+
+        public OperationResult Map<TMapType>(OperationResult<TMapType> operationResult)
+        {
+            return Map((OperationResult)operationResult);
+        }
+
+        public OperationResult<TMapType> MapTo<TMapType>(OperationResult<TMapType> operationResult)
+        {
+            if (this.HasFailed || operationResult.IsUndefined)
+                return new OperationResult<TMapType>(this);
+
+            Copy(operationResult);            
+            return new OperationResult<TMapType>(operationResult);                
         }
 
         public OperationResult Map(Func<OperationResult> mapAction)
@@ -118,8 +132,8 @@ namespace Crank.OperationResult
 
         public OperationResult(OperationResult operationResult)
         {
-            this.State = operationResult.State;
-            this._genericValue = operationResult._genericValue;
+            SetState(operationResult.State);            
+            this._genericValue = operationResult.Value;
         }
 
         public new OperationResult Success()
@@ -165,6 +179,22 @@ namespace Crank.OperationResult
         {
             SetState(OperationState.Failure);
             _genericValue = _genericValue.To<TFailingValue>(failingValue);
+            return this;
+        }
+
+        public new OperationResult<TExpectedValue> Map<TMapType>(OperationResult<TMapType> operationResult)
+        {
+            if (this.HasFailed || operationResult.IsUndefined)
+                return this;
+
+            if (typeof(TExpectedValue) == typeof(TMapType))
+            {
+                Copy(operationResult);
+                return this;
+            }
+
+            this.SetState(operationResult.State);
+            this._genericValue = _undefinedValue;
             return this;
         }
 

@@ -25,7 +25,7 @@ namespace Crank.OperationResult.Tests
         }
 
         [Fact]
-        public void GivenOperationResults_WhenInitiatedWithSucceeded_ShouldBeSuccess()
+        public void GivenOperationResults_WhenInitiatedWithSucceeded_ShouldSetStateToSuccess()
         {
             //given
             var untypedResult = OperationResult.Succeeded();
@@ -44,7 +44,7 @@ namespace Crank.OperationResult.Tests
         }
 
         [Fact]
-        public void GivenAnUnTypeOperationResult_WhenInitiatedWithFail_ShouldBeFailure()
+        public void GivenAnUnTypeOperationResult_WhenInitiatedWithFail_ShouldSetStateFailure()
         {
             //given
             var untypedResult = OperationResult.Failed();
@@ -129,7 +129,7 @@ namespace Crank.OperationResult.Tests
         }
 
         [Fact]
-        public void GivenAFailingResult_CallingSuccess_ShouldSetTheStateToSuccess()
+        public void GivenAFailingResult_CallingSuccess_ShouldSetStateToSuccess()
         {
             // given
             var untypedResult = OperationResult.Failed();

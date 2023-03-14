@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Threading.Tasks;
+using Xunit;
 
 namespace Crank.OperationResult.Tests
 {
@@ -42,6 +43,30 @@ namespace Crank.OperationResult.Tests
             Assert.Equal(OperationState.Success, copyOfFirstResult.State);
         }
 
+        [Fact]
+        public async Task WhenMappingResults_CallingMapAsyncFunc_ShouldUpdateTheFirstResult()
+        {
+            //given
+            var firstResult = OperationResult.Undefined();
+            var secondResult = OperationResult.Undefined().Success();
+
+            //when
+            var copyOfFirstResult = await firstResult.MapAsync(
+                async () =>
+                {
+                    await Task.CompletedTask;
+                    return secondResult;
+                });
+
+            //then
+            Assert.NotEqual(firstResult, secondResult);
+            Assert.Equal(firstResult, copyOfFirstResult);
+            Assert.Equal(firstResult.State, secondResult.State);
+            Assert.Equal(OperationState.Success, firstResult.State);
+            Assert.Equal(OperationState.Success, secondResult.State);
+            Assert.Equal(OperationState.Success, copyOfFirstResult.State);
+        }
+
 
         [Fact]
         public void WhenMappingResults_CallingMap_ShouldUpdateTheFirstResultAndValue()
@@ -52,8 +77,7 @@ namespace Crank.OperationResult.Tests
 
             //when
             var copyOfFirstResult = firstResult.Map(secondResult);
-            var canExtractSuccessValue = copyOfFirstResult.Value.As<string>(out var successValue);
-
+            
             //then
             Assert.NotEqual(firstResult, secondResult);
             Assert.Equal(firstResult, copyOfFirstResult);
@@ -61,9 +85,9 @@ namespace Crank.OperationResult.Tests
             Assert.Equal(OperationState.Success, firstResult.State);
             Assert.Equal(OperationState.Success, secondResult.State);
             Assert.Equal(OperationState.Success, copyOfFirstResult.State);
-
-            Assert.True(canExtractSuccessValue);
-            Assert.Equal("123", successValue.Value);
+                        
+            Assert.Equal("123", secondResult.Value);
+            Assert.Equal("123", copyOfFirstResult.TryGetValue<string>(out var value) ? value : default);
         }
 
         [Fact]
@@ -83,7 +107,71 @@ namespace Crank.OperationResult.Tests
             Assert.Equal(OperationState.Failure, firstResult.State);
             Assert.Equal(OperationState.Failure, copyOfFirstResult.State);
             Assert.Equal(OperationState.Success, secondResult.State);
-
         }
+
+        [Fact]
+        public void WhenMappingATypedResult_TheMappingResult_ShouldBeATypedResult()
+        {
+            //given
+            var untypedResult = OperationResult.Undefined();
+            var typedResult = OperationResult.Succeeded("123");
+
+            //when
+            var newTypedResult = untypedResult.MapTo(typedResult);
+
+            //then
+            Assert.Equal(OperationState.Success, untypedResult.State);
+            Assert.Equal(OperationState.Success, typedResult.State);
+            Assert.Equal(OperationState.Success, newTypedResult.State);
+
+            Assert.Equal("123", untypedResult.TryGetValue<string>(out var value) ? value : default);
+            Assert.Equal("123", typedResult.Value);
+            Assert.Equal("123", newTypedResult.Value);
+        }
+
+        [Fact]
+        public void WhenMappingTypedResultsOfTheSameType_TheMappingResult_ShouldBeTheSame()
+        {
+            //given
+            var firstResult = OperationResult.Undefined<string>();
+            var secondResult = OperationResult.Succeeded("123");
+
+            //when
+            var newResult = firstResult.Map(secondResult);
+
+            //then
+            Assert.Equal(OperationState.Success, firstResult.State);
+            Assert.Equal(OperationState.Success, secondResult.State);
+            Assert.Equal(OperationState.Success, newResult.State);
+
+            Assert.Equal("123", firstResult.Value);
+            Assert.Equal("123", secondResult.Value);
+            Assert.Equal("123", newResult.Value);
+        }
+
+        [Fact]
+        public void WhenMappingTypedResultsOfDifferentTypes_TheMappingResult_ShouldBeTheSame()
+        {
+            //given
+            var firstResult = OperationResult.Undefined<int>();
+            var secondResult = OperationResult.Succeeded("123");
+
+            //when
+            var newResult = firstResult.Map(secondResult);
+
+            //then
+            Assert.Equal(OperationState.Success, firstResult.State);
+            Assert.Equal(OperationState.Success, secondResult.State);
+            Assert.Equal(OperationState.Success, newResult.State);
+
+            
+            Assert.Equal(default, firstResult.Value);
+            Assert.True(firstResult.IsValueUndefined);
+            Assert.Equal("123", secondResult.Value);
+            Assert.Equal(default, newResult.Value);
+            Assert.True(newResult.IsValueUndefined);
+        }
+
+
     }
 }
