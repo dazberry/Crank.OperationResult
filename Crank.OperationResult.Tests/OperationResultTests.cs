@@ -125,7 +125,6 @@ namespace Crank.OperationResult.Tests
 
             Assert.True(typedResultWithValue3.As<int>(out var intValue));
             Assert.Equal(456, intValue);
-
         }
 
         [Fact]

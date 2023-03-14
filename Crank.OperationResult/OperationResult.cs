@@ -27,12 +27,12 @@ namespace Crank.OperationResult
             return result;
         }
 
-        protected GenericValue _genericValue = _undefinedValue;
-        public GenericValue Value => _genericValue;
+        protected IGenericValue _genericValue = _undefinedValue;
+        public IGenericValue Value => _genericValue;
         public bool IsValueUndefined => _genericValue == _undefinedValue;
         public bool TryGetValue<TValue>(out TValue value) =>
             _genericValue.TryGetValue<TValue>(out value);
-        
+
         public bool IsStateUndefined => State == OperationState.Undefined;
         public bool HasSucceeded => State == OperationState.Success;
         public bool HasFailed => State == OperationState.Failure;
@@ -43,10 +43,10 @@ namespace Crank.OperationResult
             return this;
         }
 
-        protected void Copy(OperationResult operationResult)
+        protected void CopyFrom(OperationResult operationResult)
         {
             State = operationResult.State;
-            _genericValue = operationResult._genericValue;            
+            _genericValue = operationResult._genericValue;
         }
 
         public OperationResult Success() =>
@@ -55,7 +55,7 @@ namespace Crank.OperationResult
         public OperationResult Success<TSuccessValue>(TSuccessValue successValue)
         {
             Success();
-            _genericValue = _genericValue.To(successValue);
+            _genericValue = _genericValue.ChangeValue(successValue);
             return this;
         }
 
@@ -64,7 +64,7 @@ namespace Crank.OperationResult
 
         public OperationResult Fail<TErrorValue>(TErrorValue value)
         {
-            _genericValue = _genericValue.To<TErrorValue>(value);
+            _genericValue = _genericValue.ChangeValue(value);
             return Fail();
         }
 
@@ -73,7 +73,7 @@ namespace Crank.OperationResult
             if (this.HasFailed)
                 return this;
 
-            Copy(operationResult);            
+            CopyFrom(operationResult);
             return this;
         }
 
@@ -84,23 +84,23 @@ namespace Crank.OperationResult
 
         public OperationResult<TMapType> MapTo<TMapType>(OperationResult<TMapType> operationResult)
         {
-            if (this.HasFailed || operationResult.IsStateUndefined)
+            if (HasFailed || (operationResult?.IsStateUndefined ?? true))
                 return new OperationResult<TMapType>(this);
 
-            Copy(operationResult);            
-            return new OperationResult<TMapType>(operationResult);                
+            CopyFrom(operationResult);
+            return new OperationResult<TMapType>(operationResult);
         }
 
         public OperationResult Map(Func<OperationResult> mapAction)
         {
-            if (!this.HasFailed && mapAction != null)
+            if (!HasFailed && mapAction != null)
                 return Map(mapAction.Invoke());
             return this;
         }
 
         public async Task<OperationResult> MapAsync(Func<Task<OperationResult>> mapAction)
         {
-            if (!this.HasFailed && mapAction != null)
+            if (!HasFailed && mapAction != null)
                 return Map(await mapAction.Invoke());
 
             return this;
@@ -113,20 +113,18 @@ namespace Crank.OperationResult
             _genericValue.TryGetValue<TExpectedValue>(out var value)
                 ? value
                 : default;
-        
+
         public bool As<TValue>(out TValue value) =>
             _genericValue.TryGetValue<TValue>(out value);
 
         public OperationResult() { }
 
-        public OperationResult(TExpectedValue value)
-        {
-            _genericValue = new GenericValue<TExpectedValue>(value);
-        }
-
         public OperationResult(OperationResult operationResult)
         {
-            SetState(operationResult.State);            
+            if (operationResult == null)
+                throw new ArgumentNullException(nameof(operationResult));
+
+            SetState(operationResult.State);
             this._genericValue = operationResult.Value;
         }
 
@@ -137,21 +135,21 @@ namespace Crank.OperationResult
             return this;
         }
 
-        public new OperationResult<TExpectedValue> Success<TValue>(TValue value)
-            where TValue : TExpectedValue
-        {
-            if (typeof(TValue) != typeof(TExpectedValue))
-                throw new Exception();
+        //public new OperationResult<TExpectedValue> Success<TValue>(TValue value)
+        //    where TValue : TExpectedValue
+        //{
+        //    if (typeof(TValue) != typeof(TExpectedValue))
+        //        throw new Exception("Invalid Types");
 
-            SetState(OperationState.Success);
-            _genericValue = _genericValue.To<TValue>(value);
-            return this;
-        }
+        //    SetState(OperationState.Success);
+        //    _genericValue = _genericValue.ChangeValue(value);
+        //    return this;
+        //}
 
         public OperationResult<TExpectedValue> Success(TExpectedValue successValue)
         {
             SetState(OperationState.Success);
-            _genericValue = _genericValue.To(successValue);
+            _genericValue = _genericValue.ChangeValue(successValue);
             return this;
         }
 
@@ -172,7 +170,7 @@ namespace Crank.OperationResult
         public new OperationResult<TExpectedValue> Fail<TFailingValue>(TFailingValue failingValue)
         {
             SetState(OperationState.Failure);
-            _genericValue = _genericValue.To<TFailingValue>(failingValue);
+            _genericValue = _genericValue.ChangeValue(failingValue);
             return this;
         }
 
@@ -181,9 +179,9 @@ namespace Crank.OperationResult
             if (this.HasFailed || operationResult.IsStateUndefined)
                 return this;
 
-            if (typeof(TExpectedValue) == typeof(TMapType))
+            if (typeof(TExpectedValue) == typeof(TMapType) || operationResult.HasFailed)
             {
-                Copy(operationResult);
+                CopyFrom(operationResult);
                 return this;
             }
 

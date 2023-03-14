@@ -2,34 +2,31 @@
 
 namespace Crank.OperationResult
 {
-    public abstract class GenericValue
-    {    
-        public abstract bool As<TType>(out GenericValue<TType> genericValue);
-        public abstract bool TryGetValue<TType>(out TType value);
-        public abstract GenericValue<TType> To<TType>(TType value);
 
-        public virtual bool IsUndefined => true;
-    }
-
-    public class UndefinedGenericValue : GenericValue
+    public interface IGenericValue
     {
-        public override bool As<TType>(out GenericValue<TType> genericValue)
-        {
-            genericValue = default;
-            return false;
-        }
-                      
-        public override bool TryGetValue<TType>(out TType value)
+        bool TryGetValue<TType>(out TType value)
         {
             value = default;
             return false;
         }
 
-        public override GenericValue<TType> To<TType>(TType value) =>
+        bool IsUndefined => true;
+
+        IGenericValue ChangeValue<TType>(TType value) =>
             new GenericValue<TType>(value);
     }
 
-    public class GenericValue<TValue> : GenericValue
+    public interface IGenericConvertable
+    {
+
+    }
+
+    public class UndefinedGenericValue : IGenericValue
+    {
+    }
+
+    public class GenericValue<TValue> : IGenericValue
     {
         public TValue Value { get; private set; }
 
@@ -38,32 +35,36 @@ namespace Crank.OperationResult
             Value = value;
         }
 
-        public override bool As<TType>(out GenericValue<TType> genericValue)
-        {
-            var result = this is GenericValue<TType>;
-            genericValue = result ? this as GenericValue<TType> : default;
-            return result;
-        }
-
-        public override bool TryGetValue<TType>(out TType value)
-        {
-            var result = this.As<TType>(out var genericValue);
-            value = result ? genericValue.Value : default;
-            return result;
-        }
-
-        public override GenericValue<TType> To<TType>(TType value)
+        public bool TryGetValue<TType>(out TType value)
         {
             if (typeof(TValue) == typeof(TType))
             {
-                this.Value = (TValue)Convert.ChangeType(value, typeof(TValue));
-                return this as GenericValue<TType>;
+                value = (TType)Convert.ChangeType(Value, typeof(TType));
+                return true;
+            };
+            value = default;
+            return false;
+        }
+
+        private bool TrySetValue<TType>(TType value)
+        {
+            if (typeof(TValue) == typeof(TType))
+            {
+                Value = (TValue)Convert.ChangeType(value, typeof(TValue));
+                return true;
             }
+            return false;
+        }
+
+        public IGenericValue ChangeValue<TType>(TType value)
+        {
+            if (TrySetValue(value))
+                return this as GenericValue<TType>;
 
             return new GenericValue<TType>(value);
         }
 
-        public override bool IsUndefined => false;
+        public bool IsUndefined => false;
     }
 
 }
