@@ -20,7 +20,7 @@ namespace Crank.OperationResult
         public static OperationResult<TType> Succeeded<TType>(TType value = default) => new OperationResult<TType>().Success(value);
 
         public static OperationResult Failed() => new OperationResult().Fail();
-        public static OperationResult<TErrorValue> Failed<TErrorValue>(TErrorValue value)
+        public static OperationResult<TErrorValue> Failed<TErrorValue>(TErrorValue value = default)
         {
             var result = new OperationResult<TErrorValue>();
             result.Fail(value);
@@ -93,18 +93,27 @@ namespace Crank.OperationResult
         }
     }
 
-    public class OperationResult<TSuccessValue> : OperationResult
+    public class OperationResult<TExpectedValue> : OperationResult
     {
-        public new TSuccessValue Value =>
-            _genericValue.TryGetValue<TSuccessValue>(out var value)
+        public new TExpectedValue Value =>
+            _genericValue.TryGetValue<TExpectedValue>(out var value)
                 ? value
                 : default;
-            
+
+        public bool Is<TValue>() =>
+            _genericValue.Is<TValue>();
+
+        public bool As<TValue>(out TValue value) =>
+            _genericValue.TryGetValue<TValue>(out value);
+
+        public bool IsValueUndefined => _genericValue == _undefinedValue;
+
+
         public OperationResult() { }
 
-        public OperationResult(TSuccessValue value)
+        public OperationResult(TExpectedValue value)
         {
-            _genericValue = new GenericValue<TSuccessValue>(value);
+            _genericValue = new GenericValue<TExpectedValue>(value);
         }
 
         public OperationResult(OperationResult operationResult)
@@ -120,9 +129,10 @@ namespace Crank.OperationResult
             return this;
         }
 
-        public new OperationResult<TSuccessValue> Success<TValue>(TValue value)
+        public new OperationResult<TExpectedValue> Success<TValue>(TValue value)
+            where TValue : TExpectedValue
         {
-            if (typeof(TValue) != typeof(TSuccessValue))
+            if (typeof(TValue) != typeof(TExpectedValue))
                 throw new Exception();
 
             SetState(OperationState.Success);
@@ -130,7 +140,7 @@ namespace Crank.OperationResult
             return this;
         }
 
-        public OperationResult<TSuccessValue> Success(TSuccessValue successValue)
+        public OperationResult<TExpectedValue> Success(TExpectedValue successValue)
         {
             SetState(OperationState.Success);
             _genericValue = _genericValue.To(successValue);
@@ -144,17 +154,23 @@ namespace Crank.OperationResult
             return this;
         }
 
-        public OperationResult<TSuccessValue> Fail(TSuccessValue successValue)
+        public OperationResult<TExpectedValue> Fail<TFailingValue>()
         {
             SetState(OperationState.Failure);
-            _genericValue = _genericValue.To<TSuccessValue>(successValue);
+            _genericValue = _undefinedValue;
             return this;
         }
 
+        public new OperationResult<TExpectedValue> Fail<TFailingValue>(TFailingValue failingValue)
+        {
+            SetState(OperationState.Failure);
+            _genericValue = _genericValue.To<TFailingValue>(failingValue);
+            return this;
+        }
 
-        public OperationResult<TSuccessValue> MapConvert<TNewSuccessValue>(
+        public OperationResult<TExpectedValue> MapConvert<TNewSuccessValue>(
             OperationResult<TNewSuccessValue> operationResult,
-            Func<TNewSuccessValue, TSuccessValue> convertAction)
+            Func<TNewSuccessValue, TExpectedValue> convertAction)
         {
             if (this.HasFailed || operationResult.IsUndefined)
                 return this;

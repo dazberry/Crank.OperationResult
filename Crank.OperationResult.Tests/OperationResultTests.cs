@@ -58,7 +58,7 @@ namespace Crank.OperationResult.Tests
         }
 
         [Fact]
-        public void GivenAnUnTypedOperationResult_WhenCallingSuccess_ShouldSetStateToSucceed()
+        public void GivenAnUndefinedOperationResult_WhenCallingSuccess_ShouldSetStateToSucceed()
         {
             //given
             var untypedResult = OperationResult.Undefined();
@@ -78,7 +78,7 @@ namespace Crank.OperationResult.Tests
         }
 
         [Fact]
-        public void GivenAnUnTypedOperationResult_WhenCallingFail_ShouldSetStateToFailure()
+        public void GivenAnUndefinedOperationResult_WhenCallingFail_ShouldSetStateToFailure()
         {
             //given
             var untypedResult = OperationResult.Undefined();
@@ -95,6 +95,62 @@ namespace Crank.OperationResult.Tests
             Assert.Equal(OperationState.Failure, typedResult.State);
             Assert.Equal(OperationState.Failure, typedResultWithValue.State);
             Assert.Equal("123", typedResultWithValue.Value);
+        }
+
+        [Fact]
+        public void GivenASuccessfulResult_CallingFail_ShouldSetStateToFail()
+        {
+            // given
+            var untypedResult = OperationResult.Succeeded();
+            var typedResult = OperationResult.Succeeded<string>();
+            var typedResultWithValue = OperationResult.Succeeded<string>("123");
+            var typedResultWithValue2 = OperationResult.Succeeded<string>("123");
+            var typedResultWithValue3 = OperationResult.Succeeded<string>("123");
+
+            //when
+            untypedResult.Fail();
+            typedResult.Fail();
+            typedResultWithValue.Fail("123");
+            typedResultWithValue2.Fail<string>();
+            typedResultWithValue3.Fail<int>(456);
+
+            //then
+            Assert.Equal(OperationState.Failure, untypedResult.State);
+            Assert.Equal(OperationState.Failure, typedResult.State);
+            Assert.Equal(OperationState.Failure, typedResultWithValue.State);
+            Assert.Equal(OperationState.Failure, typedResultWithValue2.State);
+            Assert.Equal(OperationState.Failure, typedResultWithValue3.State);
+            Assert.Equal("123", typedResultWithValue.Value);
+            Assert.True(typedResultWithValue2.IsValueUndefined);
+
+            Assert.True(typedResultWithValue3.As<int>(out var intValue));
+            Assert.Equal(456, intValue);
+
+        }
+
+        [Fact]
+        public void GivenAFailingResult_CallingSuccess_ShouldSetTheStateToSuccess()
+        {
+            // given
+            var untypedResult = OperationResult.Failed();
+            var unTypedResult2 = OperationResult.Failed();
+            var typedResult = OperationResult.Failed<string>();
+            var typedResultWithValue = OperationResult.Failed<string>("123");
+
+            //when
+            untypedResult.Success();
+            unTypedResult2.Success("123");
+            typedResult.Success();
+            typedResultWithValue.Success("123");
+
+            //then
+            Assert.Equal(OperationState.Success, untypedResult.State);
+            Assert.Equal(OperationState.Success, typedResult.State);
+            Assert.Equal(OperationState.Success, typedResultWithValue.State);
+            Assert.Equal("123", typedResultWithValue.Value);
+
+            unTypedResult2.Value.TryGetValue<string>(out var unTypedResult2Value);
+            Assert.Equal("123", unTypedResult2Value);
         }
 
     }
