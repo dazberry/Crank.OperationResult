@@ -9,8 +9,6 @@ namespace Crank.OperationResult
     {
         public OperationState State { get; protected set; } = OperationState.Undefined;
 
-        protected static readonly UndefinedGenericValue _undefinedValue = new UndefinedGenericValue();
-
         public OperationResult() { }
 
         public static OperationResult Undefined() => new OperationResult();
@@ -27,7 +25,9 @@ namespace Crank.OperationResult
             return result;
         }
 
+        protected static readonly IGenericValue _undefinedValue = UndefinedGenericValue.GetInstance();
         protected IGenericValue _genericValue = _undefinedValue;
+
         public IGenericValue Value => _genericValue;
         public bool IsValueUndefined => _genericValue == _undefinedValue;
         public bool TryGetValue<TValue>(out TValue value) =>
@@ -114,9 +114,6 @@ namespace Crank.OperationResult
                 ? value
                 : default;
 
-        public bool As<TValue>(out TValue value) =>
-            _genericValue.TryGetValue<TValue>(out value);
-
         public OperationResult() { }
 
         public OperationResult(OperationResult operationResult)
@@ -134,17 +131,6 @@ namespace Crank.OperationResult
             _genericValue = _undefinedValue;
             return this;
         }
-
-        //public new OperationResult<TExpectedValue> Success<TValue>(TValue value)
-        //    where TValue : TExpectedValue
-        //{
-        //    if (typeof(TValue) != typeof(TExpectedValue))
-        //        throw new Exception("Invalid Types");
-
-        //    SetState(OperationState.Success);
-        //    _genericValue = _genericValue.ChangeValue(value);
-        //    return this;
-        //}
 
         public OperationResult<TExpectedValue> Success(TExpectedValue successValue)
         {

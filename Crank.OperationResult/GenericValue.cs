@@ -19,11 +19,16 @@ namespace Crank.OperationResult
 
     public interface IGenericConvertable
     {
-
     }
 
     public class UndefinedGenericValue : IGenericValue
     {
+        private static UndefinedGenericValue _instance;
+        public static UndefinedGenericValue GetInstance() =>
+            _instance ??= new UndefinedGenericValue();
+
+        private UndefinedGenericValue()
+        { }
     }
 
     public class GenericValue<TValue> : IGenericValue

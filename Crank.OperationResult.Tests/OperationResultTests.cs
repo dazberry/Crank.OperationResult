@@ -120,10 +120,14 @@ namespace Crank.OperationResult.Tests
             Assert.Equal(OperationState.Failure, typedResultWithValue.State);
             Assert.Equal(OperationState.Failure, typedResultWithValue2.State);
             Assert.Equal(OperationState.Failure, typedResultWithValue3.State);
+
             Assert.Equal("123", typedResultWithValue.Value);
+
+            Assert.Equal(default, typedResultWithValue2.Value);
             Assert.True(typedResultWithValue2.IsValueUndefined);
 
-            Assert.True(typedResultWithValue3.As<int>(out var intValue));
+            Assert.Equal(default, typedResultWithValue3.Value);
+            Assert.True(typedResultWithValue3.TryGetValue<int>(out var intValue));
             Assert.Equal(456, intValue);
         }
 

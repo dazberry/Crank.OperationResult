@@ -8,7 +8,7 @@ namespace Crank.OperationResult.Tests
         public void GivenAnUndefinedValue_IsUndefined_ShouldBeTrue()
         {
             //given
-            IGenericValue value = new UndefinedGenericValue();
+            IGenericValue value = UndefinedGenericValue.GetInstance();
 
             //when
             bool isUndefined = value.IsUndefined;
@@ -21,7 +21,7 @@ namespace Crank.OperationResult.Tests
         public void GivenAnUndefinedValue_InvokeChangingValue_ShouldCreateANewValue()
         {
             //given
-            IGenericValue value = new UndefinedGenericValue();
+            IGenericValue value = UndefinedGenericValue.GetInstance();
 
             //when
             var newValue = value.ChangeValue<string>("123");
