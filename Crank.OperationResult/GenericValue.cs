@@ -17,10 +17,6 @@ namespace Crank.OperationResult
             new GenericValue<TType>(value);
     }
 
-    public interface IGenericConvertable
-    {
-    }
-
     public class UndefinedGenericValue : IGenericValue
     {
         private static UndefinedGenericValue _instance;

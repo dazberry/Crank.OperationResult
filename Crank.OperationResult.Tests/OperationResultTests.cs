@@ -15,13 +15,13 @@ namespace Crank.OperationResult.Tests
 
             //then
             Assert.Equal(OperationState.Undefined, untypedResult.State);
-            Assert.True(untypedResult.IsStateUndefined);
+            Assert.True(untypedResult.IsUndefined);
             Assert.Equal(OperationState.Undefined, typedResult.State);
-            Assert.True(typedResult.IsStateUndefined);
+            Assert.True(typedResult.IsUndefined);
             Assert.Equal(OperationState.Undefined, untypedFromUndefined.State);
-            Assert.True(untypedFromUndefined.IsStateUndefined);
+            Assert.True(untypedFromUndefined.IsUndefined);
             Assert.Equal(OperationState.Undefined, typedFromUndefined.State);
-            Assert.True(typedFromUndefined.IsStateUndefined);
+            Assert.True(typedFromUndefined.IsUndefined);
         }
 
         [Fact]
@@ -124,7 +124,7 @@ namespace Crank.OperationResult.Tests
             Assert.Equal("123", typedResultWithValue.Value);
 
             Assert.Equal(default, typedResultWithValue2.Value);
-            Assert.True(typedResultWithValue2.IsValueUndefined);
+            Assert.True(typedResultWithValue2.ValueIsUndefined);
 
             Assert.Equal(default, typedResultWithValue3.Value);
             Assert.True(typedResultWithValue3.TryGetValue<int>(out var intValue));

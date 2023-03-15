@@ -166,11 +166,11 @@ namespace Crank.OperationResult.Tests
 
 
             Assert.Equal(default, firstResult.Value);
-            Assert.True(firstResult.IsValueUndefined);
+            Assert.True(firstResult.ValueIsUndefined);
             Assert.Equal("123", secondResult.Value);
             Assert.Equal(firstResult, newResult);
             Assert.Equal(default, newResult.Value);
-            Assert.True(newResult.IsValueUndefined);
+            Assert.True(newResult.ValueIsUndefined);
         }
 
         [Fact]
@@ -191,10 +191,10 @@ namespace Crank.OperationResult.Tests
 
             Assert.Equal(firstResult, newResult);
             Assert.Equal(default, firstResult.Value);
-            Assert.False(firstResult.IsValueUndefined);
+            Assert.False(firstResult.ValueIsUndefined);
             Assert.Equal("123", secondResult.Value);
             Assert.Equal(default, newResult.Value);
-            Assert.False(newResult.IsValueUndefined);
+            Assert.False(newResult.ValueIsUndefined);
 
             Assert.True(newResult.TryGetValue<string>(out var stringValue));
             Assert.Equal("123", stringValue);
@@ -213,6 +213,48 @@ namespace Crank.OperationResult.Tests
 
             //then
             Assert.Equal(456, intResult.Value);
+        }
+
+        [Fact]
+        public void WhenMappingToAFailedResult_TheMappingIsIgnored()
+        {
+            //given
+            var failedResult = OperationResult.Failed("456");
+            var successResult = OperationResult.Succeeded("123");
+
+            //when
+            var copyOfFailedResult = failedResult.Map(successResult);
+
+            //then
+            Assert.Equal(OperationState.Failure, failedResult.State);
+            Assert.Equal(OperationState.Success, successResult.State);
+            Assert.Equal(OperationState.Failure, copyOfFailedResult.State);
+
+            Assert.Equal(copyOfFailedResult, failedResult);
+            Assert.Equal("456", failedResult.Value);
+            Assert.Equal("123", successResult.Value);
+            Assert.Equal("456", copyOfFailedResult.Value);
+        }
+
+        [Fact]
+        public void WhenMappingToASuccessResult_IfUndefined_TheMappingIsIgnored()
+        {
+            //given
+            var failedResult = OperationResult.Failed("456");
+            var undefinedResult = OperationResult.Undefined<string>();
+
+            //when
+            var copyOfFailedResult = failedResult.Map(undefinedResult);
+
+            //then
+            Assert.Equal(OperationState.Failure, failedResult.State);
+            Assert.Equal(OperationState.Undefined, undefinedResult.State);
+            Assert.Equal(OperationState.Failure, copyOfFailedResult.State);
+
+            Assert.Equal(copyOfFailedResult, failedResult);
+            Assert.Equal("456", failedResult.Value);
+            Assert.True(undefinedResult.ValueIsUndefined);
+            Assert.Equal("456", copyOfFailedResult.Value);
         }
 
 

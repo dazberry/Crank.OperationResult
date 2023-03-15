@@ -29,19 +29,12 @@ namespace Crank.OperationResult
         protected IGenericValue _genericValue = _undefinedValue;
 
         public IGenericValue Value => _genericValue;
-        public bool IsValueUndefined => _genericValue == _undefinedValue;
         public bool TryGetValue<TValue>(out TValue value) =>
             _genericValue.TryGetValue<TValue>(out value);
 
-        public bool IsStateUndefined => State == OperationState.Undefined;
+        public bool IsUndefined => State == OperationState.Undefined;
         public bool HasSucceeded => State == OperationState.Success;
         public bool HasFailed => State == OperationState.Failure;
-
-        protected OperationResult SetState(OperationState state)
-        {
-            State = state;
-            return this;
-        }
 
         protected void CopyFrom(OperationResult operationResult)
         {
@@ -49,23 +42,34 @@ namespace Crank.OperationResult
             _genericValue = operationResult._genericValue;
         }
 
-        public OperationResult Success() =>
-            SetState(OperationState.Success);
-
-        public OperationResult Success<TSuccessValue>(TSuccessValue successValue)
+        protected void Update(OperationState state, IGenericValue genericValue = null)
         {
-            Success();
-            _genericValue = _genericValue.ChangeValue(successValue);
+            State = state;
+            _genericValue = genericValue ?? _undefinedValue;
+        }
+
+        public OperationResult Success()
+        {
+            Update(OperationState.Success);
             return this;
         }
 
-        public OperationResult Fail() =>
-            SetState(OperationState.Failure);
+        public OperationResult Success<TSuccessValue>(TSuccessValue successValue)
+        {
+            Update(OperationState.Success, _genericValue.ChangeValue(successValue));
+            return this;
+        }
+
+        public OperationResult Fail()
+        {
+            Update(OperationState.Failure);
+            return this;
+        }
 
         public OperationResult Fail<TErrorValue>(TErrorValue value)
         {
-            _genericValue = _genericValue.ChangeValue(value);
-            return Fail();
+            Update(OperationState.Failure, _genericValue.ChangeValue(value));
+            return this;
         }
 
         public OperationResult Map(OperationResult operationResult)
@@ -84,7 +88,7 @@ namespace Crank.OperationResult
 
         public OperationResult<TMapType> MapTo<TMapType>(OperationResult<TMapType> operationResult)
         {
-            if (HasFailed || (operationResult?.IsStateUndefined ?? true))
+            if (HasFailed || (operationResult?.IsUndefined ?? true))
                 return new OperationResult<TMapType>(this);
 
             CopyFrom(operationResult);
@@ -102,7 +106,6 @@ namespace Crank.OperationResult
         {
             if (!HasFailed && mapAction != null)
                 return Map(await mapAction.Invoke());
-
             return this;
         }
     }
@@ -114,6 +117,8 @@ namespace Crank.OperationResult
                 ? value
                 : default;
 
+        public bool ValueIsUndefined => _genericValue == _undefinedValue;
+
         public OperationResult() { }
 
         public OperationResult(OperationResult operationResult)
@@ -121,48 +126,36 @@ namespace Crank.OperationResult
             if (operationResult == null)
                 throw new ArgumentNullException(nameof(operationResult));
 
-            SetState(operationResult.State);
-            this._genericValue = operationResult.Value;
-        }
-
-        public new OperationResult Success()
-        {
-            SetState(OperationState.Success);
-            _genericValue = _undefinedValue;
-            return this;
+            Update(operationResult.State, operationResult.Value);
         }
 
         public OperationResult<TExpectedValue> Success(TExpectedValue successValue)
         {
-            SetState(OperationState.Success);
-            _genericValue = _genericValue.ChangeValue(successValue);
+            Update(OperationState.Success, _genericValue.ChangeValue(successValue));
             return this;
         }
 
         public new OperationResult Fail()
         {
-            SetState(OperationState.Failure);
-            _genericValue = _undefinedValue;
+            Update(OperationState.Failure);
             return this;
         }
 
         public OperationResult<TExpectedValue> Fail<TFailingValue>()
         {
-            SetState(OperationState.Failure);
-            _genericValue = _undefinedValue;
+            Update(OperationState.Failure);
             return this;
         }
 
         public new OperationResult<TExpectedValue> Fail<TFailingValue>(TFailingValue failingValue)
         {
-            SetState(OperationState.Failure);
-            _genericValue = _genericValue.ChangeValue(failingValue);
+            Update(OperationState.Failure, _genericValue.ChangeValue(failingValue));
             return this;
         }
 
         public new OperationResult<TExpectedValue> Map<TMapType>(OperationResult<TMapType> operationResult)
         {
-            if (this.HasFailed || operationResult.IsStateUndefined)
+            if (this.HasFailed || operationResult.IsUndefined)
                 return this;
 
             if (typeof(TExpectedValue) == typeof(TMapType) || operationResult.HasFailed)
@@ -171,8 +164,7 @@ namespace Crank.OperationResult
                 return this;
             }
 
-            this.SetState(operationResult.State);
-            this._genericValue = _undefinedValue;
+            Update(operationResult.State);
             return this;
         }
 
@@ -180,10 +172,8 @@ namespace Crank.OperationResult
             OperationResult<TNewSuccessValue> operationResult,
             Func<TNewSuccessValue, TExpectedValue> convertAction)
         {
-            if (this.HasFailed || operationResult.IsStateUndefined)
+            if (this.HasFailed || operationResult.IsUndefined)
                 return this;
-
-            this.SetState(operationResult.State);
 
             if (operationResult.HasSucceeded)
             {
@@ -193,8 +183,10 @@ namespace Crank.OperationResult
                     return Success(convertAction.Invoke(newSuccessValue));
                 }
                 Success();
+                return this;
             }
 
+            Update(OperationState.Failure);
             return this;
         }
     }
