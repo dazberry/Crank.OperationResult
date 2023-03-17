@@ -8,7 +8,7 @@ namespace Crank.OperationResult
         protected readonly OperationResult _operationResult;
 
         public OperationResult OperationResult =>
-            _operationResult;            
+            _operationResult;
 
         public OperationResultMatch(OperationResult operationResult)
         {
@@ -16,7 +16,7 @@ namespace Crank.OperationResult
         }
 
         public OperationResultMatch Match<TMatchType>(Action<TMatchType> matchAction)
-        {            
+        {
             var matchingResult = _operationResult.TryGetValue<TMatchType>(out var value);
             if (matchingResult && matchAction != null)
             {
@@ -41,10 +41,10 @@ namespace Crank.OperationResult
             _operationResult.State == operationState
                 ? Match(matchAction)
                 : this;
-       
+
         public OperationResultMatch Default(Action<OperationResult> defaultAction = default)
         {
-            if (!_invoked)            
+            if (!_invoked)
                 defaultAction?.Invoke(_operationResult);
             return this;
         }

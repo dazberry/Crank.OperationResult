@@ -3,13 +3,13 @@ using System.Threading.Tasks;
 
 namespace Crank.OperationResult
 {
-  
+
     public enum OperationState { Undefined, Success, Failure };
 
     public class OperationResult
     {
         public OperationState State { get; protected set; } = OperationState.Undefined;
-        
+
         public OperationResult() { }
 
         public static OperationResult Undefined() => new OperationResult();
@@ -211,7 +211,7 @@ namespace Crank.OperationResult
                         return this;
                     default:
                         break;
-                }                
+                }
             }
 
             Update(GetState(success), _genericValue.ChangeValue(value));
@@ -258,7 +258,7 @@ namespace Crank.OperationResult
         public new OperationResultMatch Match<TMatchingType>(Action<TMatchingType> matchAction)
         {
             var operationMatch = new OperationResultMatch<TExpectedValue>(this);
-            return operationMatch.Match(matchAction);            
+            return operationMatch.Match(matchAction);
         }
 
         public OperationResultMatch Match(OperationState expectedState, Action<OperationResult<TExpectedValue>> matchAction)
@@ -271,7 +271,7 @@ namespace Crank.OperationResult
         {
             var operationMatch = new OperationResultMatch<TExpectedValue>(this);
             return operationMatch.Match(expectedState, matchAction);
-        }            
+        }
     }
 
 }

@@ -4,7 +4,7 @@ namespace Crank.OperationResult.Tests
 {
     public class OperationResultSetTests
     {
-        [Theory]        
+        [Theory]
         [InlineData(true, OperationState.Success)]
         [InlineData(false, OperationState.Failure)]
         public void WhenUsingTheSetMethod_TheSuccessParameter_ShouldCauseTheStateToChange(bool Success, OperationState expectedState)
@@ -12,7 +12,7 @@ namespace Crank.OperationResult.Tests
             //given
             var result = OperationResult.Undefined();
 
-            //when 
+            //when
             result.Set(Success);
 
             //then
@@ -86,7 +86,7 @@ namespace Crank.OperationResult.Tests
             Assert.Throws<OperationResultExpectedTypeMismatchException>(() =>
             {
                 stringResult.Set(true, anIntValue);
-            });            
+            });
         }
 
         [Fact]
@@ -103,7 +103,7 @@ namespace Crank.OperationResult.Tests
             stringResult.Set(true, anIntValue);
 
             //then
-            Assert.True(stringResult.ValueIsUndefined);            
+            Assert.True(stringResult.ValueIsUndefined);
         }
 
         [Fact]

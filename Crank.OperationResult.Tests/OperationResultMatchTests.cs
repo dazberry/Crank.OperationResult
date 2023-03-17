@@ -5,11 +5,11 @@ using Xunit;
 namespace Crank.OperationResult.Tests
 {
     public class OperationResultMatchTests
-    {       
+    {
         [Fact]
         public void WhenMatchingAgainstATypedOperationResult_IfTheTypeIsAString_ShouldInvokeTheMatchByType()
         {
-            //given            
+            //given
             var result = OperationResult.Undefined<string>().Success("1234");
             var expectedValueType = "undefined";
 
@@ -29,7 +29,7 @@ namespace Crank.OperationResult.Tests
 
             //then
             Assert.True(matched);
-            Assert.Equal(typeof(string).ToString(), expectedValueType);            
+            Assert.Equal(typeof(string).ToString(), expectedValueType);
         }
 
         [Fact]
@@ -232,7 +232,7 @@ namespace Crank.OperationResult.Tests
             var expectedOperationState = success ? $"{OperationState.Success}" : $"{OperationState.Failure}";
 
             //when
-            var matched = result                    
+            var matched = result
                 .Match<string>(
                     OperationState.Undefined,
                     value => operationState = $"{OperationState.Undefined}")
@@ -279,8 +279,8 @@ namespace Crank.OperationResult.Tests
             //then
             Assert.True(matched);
             Assert.Equal(expectedOperationState, operationState);
-        }       
-        
+        }
+
         [Theory]
         [InlineData(OperationState.Undefined)]
         [InlineData(OperationState.Success)]
@@ -290,7 +290,7 @@ namespace Crank.OperationResult.Tests
             var result = OperationResult.Undefined<string>();
             if (operationState != OperationState.Undefined)
                 result.Set(operationState == OperationState.Success);
-            var expectedValue = $"{operationState}";            
+            var expectedValue = $"{operationState}";
             var actualValue = "Not specified";
 
             //when
@@ -351,7 +351,7 @@ namespace Crank.OperationResult.Tests
             var matched = result
                 .Match<string>(
                     OperationState.Undefined,
-                    value => operationState = $"{OperationState.Undefined}")              
+                    value => operationState = $"{OperationState.Undefined}")
                 .Matched;
 
             //then
@@ -365,7 +365,7 @@ namespace Crank.OperationResult.Tests
             var result = OperationResult.Succeeded<string>("1234");
             var matches = new bool[] { false, false, false, false, false, false, false, false, false };
             var expectedResult = new bool[] { true, false, true, true, false, true, false, true, false };
-            
+
             //when
             var matched = result
                 .Match<string>(
@@ -397,7 +397,7 @@ namespace Crank.OperationResult.Tests
             //then
             Assert.True(matched);
             Assert.Equal(5, matches.Count(x => x));
-            Assert.Equal(expectedResult, matches);            
+            Assert.Equal(expectedResult, matches);
         }
 
 
