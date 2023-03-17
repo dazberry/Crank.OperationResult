@@ -3,12 +3,13 @@ using System.Threading.Tasks;
 
 namespace Crank.OperationResult
 {
+  
     public enum OperationState { Undefined, Success, Failure };
 
     public class OperationResult
     {
         public OperationState State { get; protected set; } = OperationState.Undefined;
-
+        
         public OperationResult() { }
 
         public static OperationResult Undefined() => new OperationResult();
@@ -72,6 +73,21 @@ namespace Crank.OperationResult
             return this;
         }
 
+        protected static OperationState GetState(bool success) =>
+            success ? OperationState.Success : OperationState.Failure;
+
+        public OperationResult Set(bool success)
+        {
+            Update(GetState(success));
+            return this;
+        }
+
+        public OperationResult Set<TValue>(bool success, TValue value)
+        {
+            Update(GetState(success), _genericValue.ChangeValue(value));
+            return this;
+        }
+
         public OperationResult Map(OperationResult operationResult)
         {
             if (this.HasFailed)
@@ -119,6 +135,17 @@ namespace Crank.OperationResult
 
         public bool ValueIsUndefined => _genericValue == _undefinedValue;
 
+        public readonly OperationResultOptions Options = new OperationResultOptions()
+        {
+            ExpectedResultTypeChecking = OperationResultTypeChecking.Strict
+        };
+
+        public OperationResult<TExpectedValue> SetOptions(Action<OperationResultOptions> optionsAction)
+        {
+            optionsAction?.Invoke(Options);
+            return this;
+        }
+
         public OperationResult() { }
 
         public OperationResult(OperationResult operationResult)
@@ -150,6 +177,26 @@ namespace Crank.OperationResult
         public new OperationResult<TExpectedValue> Fail<TFailingValue>(TFailingValue failingValue)
         {
             Update(OperationState.Failure, _genericValue.ChangeValue(failingValue));
+            return this;
+        }
+
+        public new OperationResult<TExpectedValue> Set<TValue>(bool success, TValue value)
+        {
+            if (success && typeof(TValue) != typeof(TExpectedValue))
+            {
+                switch (Options.ExpectedResultTypeChecking)
+                {
+                    case OperationResultTypeChecking.Strict:
+                        throw new OperationResultExpectedTypeMismatchException(typeof(TExpectedValue), typeof(TValue));
+                    case OperationResultTypeChecking.Discard:
+                        Update(OperationState.Success);
+                        return this;
+                    default:
+                        break;
+                }                
+            }
+
+            Update(GetState(success), _genericValue.ChangeValue(value));
             return this;
         }
 
