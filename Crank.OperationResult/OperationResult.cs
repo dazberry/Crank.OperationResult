@@ -124,6 +124,24 @@ namespace Crank.OperationResult
                 return Map(await mapAction.Invoke());
             return this;
         }
+
+        public OperationResultMatch Match<TMatchingType>(Action<TMatchingType> matchAction)
+        {
+            OperationResultMatch match = new OperationResultMatch(this);
+            return match.Match(matchAction);
+        }
+
+        public OperationResultMatch Match(OperationState expectedState, Action<OperationResult> matchAction)
+        {
+            var operationMatch = new OperationResultMatch(this);
+            return operationMatch.Match(expectedState, matchAction);
+        }
+
+        public OperationResultMatch Match<TMatchingType>(OperationState expectedState, Action<TMatchingType> matchAction)
+        {
+            OperationResultMatch match = new OperationResultMatch(this);
+            return match.Match(expectedState, matchAction);
+        }
     }
 
     public class OperationResult<TExpectedValue> : OperationResult
@@ -236,6 +254,24 @@ namespace Crank.OperationResult
             Update(OperationState.Failure);
             return this;
         }
+
+        public new OperationResultMatch Match<TMatchingType>(Action<TMatchingType> matchAction)
+        {
+            var operationMatch = new OperationResultMatch<TExpectedValue>(this);
+            return operationMatch.Match(matchAction);            
+        }
+
+        public OperationResultMatch Match(OperationState expectedState, Action<OperationResult<TExpectedValue>> matchAction)
+        {
+            var operationMatch = new OperationResultMatch<TExpectedValue>(this);
+            return operationMatch.Match(expectedState, matchAction);
+        }
+
+        public new OperationResultMatch Match<TMatchingType>(OperationState expectedState, Action<TMatchingType> matchAction)
+        {
+            var operationMatch = new OperationResultMatch<TExpectedValue>(this);
+            return operationMatch.Match(expectedState, matchAction);
+        }            
     }
 
 }
