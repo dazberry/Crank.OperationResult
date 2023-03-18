@@ -90,7 +90,7 @@ namespace Crank.OperationResult
 
         public OperationResult Map(OperationResult operationResult)
         {
-            if (this.HasFailed)
+            if (HasFailed || (operationResult?.IsUndefined ?? true))
                 return this;
 
             CopyFrom(operationResult);

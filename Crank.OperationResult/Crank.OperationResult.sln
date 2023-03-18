@@ -3,9 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.33214.272
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crank.OperationResult", "Crank.OperationResult.csproj", "{C06954A2-27E5-4533-A366-5DA48CDC3E47}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crank.OperationResult", "Crank.OperationResult.csproj", "{C06954A2-27E5-4533-A366-5DA48CDC3E47}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Crank.OperationResult.Tests", "..\Crank.OperationResult.Tests\Crank.OperationResult.Tests.csproj", "{5FC29FEB-4922-411C-8A6C-C7CC83BDB94F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Crank.OperationResult.Tests", "..\Crank.OperationResult.Tests\Crank.OperationResult.Tests.csproj", "{5FC29FEB-4922-411C-8A6C-C7CC83BDB94F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{75346F6B-1DDB-45E4-BF3E-B997136B0E6D}"
+	ProjectSection(SolutionItems) = preProject
+		..\README.md = ..\README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
