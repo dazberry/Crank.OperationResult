@@ -7,6 +7,34 @@ namespace Crank.OperationResult.Tests
     public class OperationResultMatchTests
     {
         [Fact]
+        public void WhenMatchingAgainstATypedOperationResult_OnEmptyMatch_WillReturnFalse()
+        {
+            //given
+            var result = OperationResult.Undefined<string>().Success("1234");
+
+            //when
+            var matched = result
+                .Match(m => { });
+
+            //then
+            Assert.False(matched);
+        }
+
+        [Fact]
+        public void WhenMatchingAgainstAnUntypedOperationResult_OnEmptyMatch_WillReturnFalse()
+        {
+            //given
+            var result = OperationResult.Undefined().Success("1234");
+
+            //when
+            var matched = result
+                .Match(m => { });
+
+            //then
+            Assert.False(matched);
+        }
+
+        [Fact]
         public void WhenMatchingAgainstATypedOperationResult_IfTheTypeIsAString_ShouldInvokeTheMatchByType()
         {
             //given
@@ -15,17 +43,18 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<Exception>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<int>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<string>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<double>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Default(
-                    res => expectedValueType = "default")
-                .Matched;
+                .Match(m =>
+                    m.TypeIs<Exception>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<int>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<string>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<double>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .Default(
+                        res => expectedValueType = "default"));
+
 
             //then
             Assert.True(matched);
@@ -41,18 +70,17 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<Exception>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<int>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<string>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<double>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Default(
-                    res => expectedValueType = "default")
-                .Matched;
-
+                .Match(m =>
+                    m.TypeIs<Exception>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<int>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<string>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<double>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .Default(
+                        res => expectedValueType = "default"));
 
             //then
             Assert.True(matched);
@@ -71,18 +99,17 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<Exception>(
+                .Match(m =>
+                m.TypeIs<Exception>(
                     value => expectedValueType = value.GetType().ToString())
-                .Match<int>(
+                .TypeIs<int>(
                     value => expectedValueType = value.GetType().ToString())
-                .Match<string>(
+                .TypeIs<string>(
                     value => expectedValueType = value.GetType().ToString())
-                .Match<double>(
+                .TypeIs<double>(
                     value => expectedValueType = value.GetType().ToString())
                 .Default(
-                    res => expectedValueType = "default")
-                .Matched;
-
+                    res => expectedValueType = "default"));
 
             //then
             Assert.True(matched);
@@ -99,18 +126,17 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<Exception>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<int>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<string>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<double>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Default(
-                    res => expectedValueType = "default")
-                .Matched;
-
+                .Match(m =>
+                    m.TypeIs<Exception>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<int>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<string>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<double>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .Default(
+                        res => expectedValueType = "default"));
 
             //then
             Assert.True(matched);
@@ -127,16 +153,15 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<Exception>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<int>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<string>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<double>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Matched;
-
+                .Match(m =>
+                    m.TypeIs<Exception>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<int>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<string>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<double>(
+                        value => expectedValueType = value.GetType().ToString()));
 
             //then
             Assert.False(matched);
@@ -153,16 +178,15 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<Exception>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<int>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<string>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<double>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Matched;
-
+                .Match(m =>
+                    m.TypeIs<Exception>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<int>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<string>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<double>(
+                        value => expectedValueType = value.GetType().ToString()));
 
             //then
             Assert.False(matched);
@@ -178,17 +202,17 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<Exception>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<int>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<string>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<double>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Default(
-                    res => expectedValueType = "default")
-                .Matched;
+                .Match(m =>
+                    m.TypeIs<Exception>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<int>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<string>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<double>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .Default(
+                        res => expectedValueType = "default"));
 
             //then
             Assert.False(matched);
@@ -204,17 +228,17 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<Exception>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<int>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<string>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Match<double>(
-                    value => expectedValueType = value.GetType().ToString())
-                .Default(
-                    res => expectedValueType = "default")
-                .Matched;
+                .Match(m =>
+                    m.TypeIs<Exception>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<int>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<string>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .TypeIs<double>(
+                        value => expectedValueType = value.GetType().ToString())
+                    .Default(
+                        res => expectedValueType = "default"));
 
             //then
             Assert.False(matched);
@@ -233,18 +257,20 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<string>(
-                    OperationState.Undefined,
-                    value => operationState = $"{OperationState.Undefined}")
-                .Match<string>(
-                    OperationState.Success,
-                    value => operationState = $"{OperationState.Success}")
-                .Match<string>(
-                    OperationState.Failure,
-                    value => operationState = $"{OperationState.Failure}")
-                .Default(
-                    res => operationState = "default")
-                .Matched;
+                .Match(m =>
+                    m.TypeAndStateAre<string>(
+                        OperationState.Undefined,
+                        value => operationState = $"{OperationState.Undefined}")
+                    .TypeAndStateAre<string>(
+                        OperationState.Success,
+                        value => operationState = $"{OperationState.Success}")
+                    .TypeAndStateAre<string>(
+                        OperationState.Failure,
+                        value => operationState = $"{OperationState.Failure}")
+                    .Default(
+                        res => operationState = "default")
+                );
+
 
             //then
             Assert.True(matched);
@@ -263,18 +289,18 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<string>(
-                    OperationState.Undefined,
-                    value => operationState = $"{OperationState.Undefined}")
-                .Match<string>(
-                    OperationState.Success,
-                    value => operationState = $"{OperationState.Success}")
-                .Match<string>(
-                    OperationState.Failure,
-                    value => operationState = $"{OperationState.Failure}")
-                .Default(
-                    res => operationState = "default")
-                .Matched;
+                .Match(m =>
+                    m.TypeAndStateAre<string>(
+                        OperationState.Undefined,
+                        value => operationState = $"{OperationState.Undefined}")
+                    .TypeAndStateAre<string>(
+                        OperationState.Success,
+                        value => operationState = $"{OperationState.Success}")
+                    .TypeAndStateAre<string>(
+                        OperationState.Failure,
+                        value => operationState = $"{OperationState.Failure}")
+                    .Default(
+                        res => operationState = "default"));
 
             //then
             Assert.True(matched);
@@ -295,16 +321,16 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match(
-                    OperationState.Undefined,
-                    res => actualValue = $"{OperationState.Undefined}")
-                .Match(
-                    OperationState.Success,
-                    res => actualValue = $"{OperationState.Success}")
-                .Match(
-                    OperationState.Failure,
-                    res => actualValue = $"{OperationState.Failure}")
-                .Matched;
+                .Match(m =>
+                    m.Match(
+                        OperationState.Undefined,
+                        res => actualValue = $"{OperationState.Undefined}")
+                    .StateIs(
+                        OperationState.Success,
+                        res => actualValue = $"{OperationState.Success}")
+                    .StateIs(
+                        OperationState.Failure,
+                        res => actualValue = $"{OperationState.Failure}"));
 
             //then
             Assert.True(matched);
@@ -325,16 +351,16 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match(
-                    OperationState.Undefined,
-                    res => actualValue = $"{OperationState.Undefined}")
-                .Match(
-                    OperationState.Success,
-                    res => actualValue = $"{OperationState.Success}")
-                .Match(
-                    OperationState.Failure,
-                    res => actualValue = $"{OperationState.Failure}")
-                .Matched;
+                .Match(m =>
+                    m.StateIs(
+                        OperationState.Undefined,
+                        res => actualValue = $"{OperationState.Undefined}")
+                    .StateIs(
+                        OperationState.Success,
+                        res => actualValue = $"{OperationState.Success}")
+                    .StateIs(
+                        OperationState.Failure,
+                        res => actualValue = $"{OperationState.Failure}"));
 
             //then
             Assert.True(matched);
@@ -349,10 +375,10 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<string>(
-                    OperationState.Undefined,
-                    value => operationState = $"{OperationState.Undefined}")
-                .Matched;
+                .Match(m =>
+                    m.TypeAndStateAre<string>(
+                        OperationState.Undefined,
+                        value => operationState = $"{OperationState.Undefined}"));
 
             //then
             Assert.False(matched);
@@ -368,31 +394,31 @@ namespace Crank.OperationResult.Tests
 
             //when
             var matched = result
-                .Match<string>(
+                .Match(m =>
+                m.TypeIs<string>(
                     value => matches[0] = true)
-                .Match<int>(
+                .TypeIs<int>(
                     value => matches[1] = true)
-                .Match(
+                .StateIs(
                     OperationState.Success,
                     value => matches[2] = true)
-                .Match<string>(
+                .TypeIs<string>(
                     value => matches[3] = true)
-                .Match<int>(
+                .TypeAndStateAre<int>(
                     OperationState.Success,
                     value => matches[4] = true)
-                .Match<string>(
+                .TypeAndStateAre<string>(
                     OperationState.Success,
                     value => matches[5] = true)
-                .Match<Guid>(
+                .TypeAndStateAre<Guid>(
                     OperationState.Success,
                     value => matches[6] = true)
-                .Match(
+                .StateIs(
                     OperationState.Success,
                     value => matches[7] = true)
-                .Match(
+                .StateIs(
                     OperationState.Failure,
-                    value => matches[8] = true)
-                .Matched;
+                    value => matches[8] = true));
 
             //then
             Assert.True(matched);
@@ -400,10 +426,70 @@ namespace Crank.OperationResult.Tests
             Assert.Equal(expectedResult, matches);
         }
 
+        [Fact]
+        public void WhenMatchingToAgainstATypedOperationResult_OnEmptyMatch_WillReturnTheDefaultResult()
+        {
+            //given
+            var defaultValue = "1234";
+            var result = OperationResult.Undefined<string>().Success("5678");
 
+            //when
+            var matchValue = result
+                .MatchTo(m => { }, defaultValue);
 
+            //then
+            Assert.Equal(defaultValue, matchValue);
+        }
 
+        [Fact]
+        public void WhenMatchingToAgainstAnUntypedOperationResult_OnEmptyMatch_WillReturnTheDefaultResult()
+        {
+            //given
+            var defaultValue = "1234";
+            var result = OperationResult.Undefined().Success("1234");
 
+            //when
+            var matchValue = result
+                .MatchTo(m => { }, defaultValue);
+
+            //then
+            Assert.Equal(defaultValue, matchValue);
+        }
+
+        [Fact]
+        public void WhenMatchingToAnOperationResult_TheMatchResult_ShouldBeReturned()
+        {
+            //given
+            var intValue = 1234;
+            var result = OperationResult.Succeeded<int>(intValue);
+
+            //when
+            var stringResult =
+                result.MatchTo<string>(m => m
+                    .TypeIs<string>(value => m.Result = value)
+                    .TypeIs<int>(value => m.Result = $"{value}"));
+
+            //then
+            Assert.Equal($"{intValue}", stringResult);
+        }
+
+        [Fact]
+        public void WhenMatchingToAnOperationResult_IfNoMatchsOccur_ReturnTheDefaultValue()
+        {
+            //given
+            var guidValue = Guid.NewGuid();
+            var result = OperationResult.Succeeded<Guid>(guidValue);
+
+            //when
+            var stringResult =
+                result.MatchTo(m => m
+                    .TypeIs<string>(value => m.Result = value)
+                    .TypeIs<int>(value => m.Result = $"{value}"),
+                    defaultResult: $"{guidValue}");
+
+            //then
+            Assert.Equal($"{guidValue}", stringResult);
+        }
 
     }
 }

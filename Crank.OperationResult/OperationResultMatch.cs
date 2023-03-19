@@ -7,6 +7,7 @@ namespace Crank.OperationResult
         protected bool _invoked;
         protected readonly OperationResult _operationResult;
 
+
         public OperationResult OperationResult =>
             _operationResult;
 
@@ -15,7 +16,7 @@ namespace Crank.OperationResult
             _operationResult = operationResult;
         }
 
-        public OperationResultMatch Match<TMatchType>(Action<TMatchType> matchAction)
+        public OperationResultMatch TypeIs<TMatchType>(Action<TMatchType> matchAction)
         {
             var matchingResult = _operationResult.TryGetValue<TMatchType>(out var value);
             if (matchingResult && matchAction != null)
@@ -26,7 +27,7 @@ namespace Crank.OperationResult
             return this;
         }
 
-        public OperationResultMatch Match(OperationState operationState, Action<OperationResult> matchAction)
+        public OperationResultMatch StateIs(OperationState operationState, Action<OperationResult> matchAction)
         {
             var matchingResult = _operationResult.State == operationState;
             if (matchingResult && matchAction != null)
@@ -37,9 +38,25 @@ namespace Crank.OperationResult
             return this;
         }
 
-        public OperationResultMatch Match<TMatchType>(OperationState operationState, Action<TMatchType> matchAction) =>
+        public OperationResultMatch TypeAndStateAre<TMatchType>(OperationState operationState, Action<TMatchType> matchAction) =>
             _operationResult.State == operationState
-                ? Match(matchAction)
+                ? TypeIs(matchAction)
+                : this;
+
+        public OperationResultMatch ValueIsUndefined(Action<OperationResult> matchAction)
+        {
+            var matchingResult = _operationResult.Value.IsUndefined;
+            if (matchingResult && matchAction != null)
+            {
+                _invoked = true;
+                matchAction.Invoke(OperationResult);
+            }
+            return this;
+        }
+
+        public OperationResultMatch ValueIsUndefined(OperationState operationState, Action<OperationResult> matchAction) =>
+            _operationResult.State == operationState
+                ? ValueIsUndefined(matchAction)
                 : this;
 
         public OperationResultMatch Default(Action<OperationResult> defaultAction = default)
@@ -63,6 +80,43 @@ namespace Crank.OperationResult
         public OperationResultMatch(OperationResult<TExpectedValue> operationResult) : base(operationResult)
         {
             _typedOperationResult = operationResult;
+        }
+
+        public OperationResultMatch Match(OperationState operationState, Action<OperationResult<TExpectedValue>> matchAction)
+        {
+            var matchingResult = _operationResult.State == operationState;
+            if (matchingResult && matchAction != null)
+            {
+                _invoked = true;
+                matchAction?.Invoke(OperationResult);
+            }
+            return this;
+        }
+    }
+
+    public class OperationResultMatchTo<TMatchResult> : OperationResultMatch
+    {
+        public TMatchResult Result { get; set; }
+
+        public OperationResultMatchTo(OperationResult operationResult, TMatchResult defaultValue) : base(operationResult)
+        {
+            Result = defaultValue;
+        }
+    }
+
+    public class OperationResultMatchTo<TExpectedValue, TMatchResult> : OperationResultMatch
+    {
+        private readonly OperationResult<TExpectedValue> _typedOperationResult;
+
+        public TMatchResult Result { get; set; }
+
+        public new OperationResult<TExpectedValue> OperationResult =>
+            _typedOperationResult;
+
+        public OperationResultMatchTo(OperationResult<TExpectedValue> operationResult, TMatchResult defaultValue) : base(operationResult)
+        {
+            _typedOperationResult = operationResult;
+            Result = defaultValue;
         }
 
         public OperationResultMatch Match(OperationState operationState, Action<OperationResult<TExpectedValue>> matchAction)

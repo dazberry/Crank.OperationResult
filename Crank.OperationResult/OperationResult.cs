@@ -88,59 +88,55 @@ namespace Crank.OperationResult
             return this;
         }
 
-        public OperationResult Map(OperationResult operationResult)
+        public OperationResult Map(OperationResult mapFromResult)
         {
-            if (HasFailed || (operationResult?.IsUndefined ?? true))
+            if (HasFailed || (mapFromResult?.IsUndefined ?? true))
                 return this;
 
-            CopyFrom(operationResult);
+            CopyFrom(mapFromResult);
             return this;
         }
 
-        public OperationResult Map<TMapType>(OperationResult<TMapType> operationResult)
+        public OperationResult Map<TMapType>(OperationResult<TMapType> mapFromResult)
         {
-            return Map((OperationResult)operationResult);
+            return Map((OperationResult)mapFromResult);
         }
 
-        public OperationResult<TMapType> MapTo<TMapType>(OperationResult<TMapType> operationResult)
+        public OperationResult<TMapType> MapTo<TMapType>(OperationResult<TMapType> mapFromResult)
         {
-            if (HasFailed || (operationResult?.IsUndefined ?? true))
+            if (HasFailed || (mapFromResult?.IsUndefined ?? true))
                 return new OperationResult<TMapType>(this);
 
-            CopyFrom(operationResult);
-            return new OperationResult<TMapType>(operationResult);
+            CopyFrom(mapFromResult);
+            return new OperationResult<TMapType>(mapFromResult);
         }
 
-        public OperationResult Map(Func<OperationResult> mapAction)
+        public OperationResult Map(Func<OperationResult> mapFromAction)
         {
-            if (!HasFailed && mapAction != null)
-                return Map(mapAction.Invoke());
+            if (!HasFailed && mapFromAction != null)
+                return Map(mapFromAction.Invoke());
             return this;
         }
 
-        public async Task<OperationResult> MapAsync(Func<Task<OperationResult>> mapAction)
+        public async Task<OperationResult> MapAsync(Func<Task<OperationResult>> mapFromActionAsync)
         {
-            if (!HasFailed && mapAction != null)
-                return Map(await mapAction.Invoke());
+            if (!HasFailed && mapFromActionAsync != null)
+                return Map(await mapFromActionAsync.Invoke());
             return this;
         }
 
-        public OperationResultMatch Match<TMatchingType>(Action<TMatchingType> matchAction)
-        {
-            OperationResultMatch match = new OperationResultMatch(this);
-            return match.Match(matchAction);
-        }
-
-        public OperationResultMatch Match(OperationState expectedState, Action<OperationResult> matchAction)
+        public bool Match(Action<OperationResultMatch> matchAction)
         {
             var operationMatch = new OperationResultMatch(this);
-            return operationMatch.Match(expectedState, matchAction);
+            matchAction?.Invoke(operationMatch);
+            return operationMatch.Matched;
         }
 
-        public OperationResultMatch Match<TMatchingType>(OperationState expectedState, Action<TMatchingType> matchAction)
+        public TMatchResult MatchTo<TMatchResult>(Action<OperationResultMatchTo<TMatchResult>> matchAction, TMatchResult defaultResult = default)
         {
-            OperationResultMatch match = new OperationResultMatch(this);
-            return match.Match(expectedState, matchAction);
+            var operationMatch = new OperationResultMatchTo<TMatchResult>(this, defaultResult);
+            matchAction?.Invoke(operationMatch);
+            return operationMatch.Result;
         }
     }
 
@@ -218,60 +214,58 @@ namespace Crank.OperationResult
             return this;
         }
 
-        public new OperationResult<TExpectedValue> Map<TMapType>(OperationResult<TMapType> operationResult)
+        public new OperationResult<TExpectedValue> Map<TMapType>(OperationResult<TMapType> mapFromResult)
         {
-            if (this.HasFailed || operationResult.IsUndefined)
+            if (this.HasFailed || mapFromResult.IsUndefined)
                 return this;
 
-            if (typeof(TExpectedValue) == typeof(TMapType) || operationResult.HasFailed)
+            if (typeof(TExpectedValue) == typeof(TMapType) || mapFromResult.HasFailed)
             {
-                CopyFrom(operationResult);
+                CopyFrom(mapFromResult);
                 return this;
             }
 
-            Update(operationResult.State);
+            Update(mapFromResult.State);
             return this;
         }
 
         public OperationResult<TExpectedValue> MapConvert<TNewSuccessValue>(
-            OperationResult<TNewSuccessValue> operationResult,
+            OperationResult<TNewSuccessValue> mapFromResult,
             Func<TNewSuccessValue, TExpectedValue> convertAction)
         {
-            if (this.HasFailed || operationResult.IsUndefined)
+            if (this.HasFailed || mapFromResult.IsUndefined)
                 return this;
 
-            if (operationResult.HasSucceeded)
+            if (mapFromResult.HasSucceeded)
             {
                 if (convertAction != null)
                 {
-                    operationResult._genericValue.TryGetValue<TNewSuccessValue>(out var newSuccessValue);
+                    mapFromResult._genericValue.TryGetValue<TNewSuccessValue>(out var newSuccessValue);
                     return Success(convertAction.Invoke(newSuccessValue));
                 }
                 Success();
                 return this;
             }
 
-            Update(OperationState.Failure);
+            CopyFrom(mapFromResult);
             return this;
         }
 
-        public new OperationResultMatch Match<TMatchingType>(Action<TMatchingType> matchAction)
+
+        public bool Match(Action<OperationResultMatch<TExpectedValue>> matchAction)
         {
             var operationMatch = new OperationResultMatch<TExpectedValue>(this);
-            return operationMatch.Match(matchAction);
+            matchAction?.Invoke(operationMatch);
+            return operationMatch.Matched;
         }
 
-        public OperationResultMatch Match(OperationState expectedState, Action<OperationResult<TExpectedValue>> matchAction)
+        public TMatchResult MatchTo<TMatchResult>(Action<OperationResultMatchTo<TExpectedValue, TMatchResult>> matchAction, TMatchResult defaultResult = default)
         {
-            var operationMatch = new OperationResultMatch<TExpectedValue>(this);
-            return operationMatch.Match(expectedState, matchAction);
+            var operationMatch = new OperationResultMatchTo<TExpectedValue, TMatchResult>(this, defaultResult);
+            matchAction?.Invoke(operationMatch);
+            return operationMatch.Result;
         }
 
-        public new OperationResultMatch Match<TMatchingType>(OperationState expectedState, Action<TMatchingType> matchAction)
-        {
-            var operationMatch = new OperationResultMatch<TExpectedValue>(this);
-            return operationMatch.Match(expectedState, matchAction);
-        }
     }
 
 }
