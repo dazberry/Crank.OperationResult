@@ -1,5 +1,6 @@
 
 
+
 # Crank.OperationResult
 
 **crank**
@@ -29,8 +30,6 @@ When an result is first created, either with **new**, or using the **Undefined()
 **State** As above
 **Value** A successful result is constrained to being of type TExpectedValue. A failure value can be of any type. 
 
-
-
 ### Initialising an OperationResult
 An OperationResult can be created a number of ways.
 
@@ -53,7 +52,7 @@ An OperationResult state can be changed using the Success, Fail and Set methods.
 
 ### Change state to successful
     
-	// success no value
+    // success no value
     var untypedResult = OperationResult.Undefined();
     unTypedResult.Success(); 
     
@@ -67,7 +66,7 @@ An OperationResult state can be changed using the Success, Fail and Set methods.
 
 ### Change state to failure
     
-	// failure with no value
+    // failure with no value
     var untypedResult = OperationResult.Undefined();
     unTypedResult.Fail();   
     
@@ -99,25 +98,25 @@ The actual value can be retrieved using either of the TryGetValue methods.
     untypedResult.Value.TryGetValue(out var storedIntValue);
     _ = typedResult.Value.IsUndefined;
     
-	var typedResult = OperationResult.Undefined<string>();
-	typedResult.Success(aStringValue);
-	_ = typedResult.Value;
-	_ = typedResult.ValueIsUndefined;
-	typedResult.TryGetValue<string>(out var stringValue);
-	
+    var typedResult = OperationResult.Undefined<string>();
+    typedResult.Success(aStringValue);
+    _ = typedResult.Value;
+    _ = typedResult.ValueIsUndefined;
+    typedResult.TryGetValue<string>(out var stringValue);
+    
 
 ### Change state using the Set method
 
-	// setting success or failure based on aBooleanCondition
-	var untypedResult = OperationResult.Undefined();
-	untypedResult.Set(aBooleanCondition); 
-	
-	// setting success or failure based on aBooleanCondition with value
+    // setting success or failure based on aBooleanCondition
+    var untypedResult = OperationResult.Undefined();
+    untypedResult.Set(aBooleanCondition); 
+    
+    // setting success or failure based on aBooleanCondition with value
     var untypedResult = OperationResult.Undefined();
     untypedResult.Set<string>(aBooleanCondition, "a string value");
     untypedResult.Set<int>(aBooleanCondition, anIntValue);
 
-	// setting success of failure, a constraint may or may not apply
+    // setting success of failure, a constraint may or may not apply
     var typedResult = OperationResult.Undefined<string>();
     typedResult.Set<string>(aBooleanCondition, "a string value");
     typedResult.Set<int>(aBooleanCondition, 1234);
@@ -138,9 +137,9 @@ The ExpectedResultTypeChecking flag allows for one of three different options
 
 
 ## Mapping from other OperationResults
-To map from one OperationResult to another, use the Map, MapTo, MapConvert or MapAsync methods.
+To map from one OperationResult to another, use the Map, MapTo, MapConvert or MapAsync methods.  
 
-	// sets state from secondResult
+    // sets state from secondResult
     var untypedResult = OperationResult.Undefined<string>();
     var secondResult = OperationResult.Successful();
     untypedResult.Map(secondResult);
@@ -151,39 +150,110 @@ To map from one OperationResult to another, use the Map, MapTo, MapConvert or Ma
     var secondResult = OperationResult.Fail<int>(404);
     untypedResult.Map(secondResult);
     var failed = untypedResult.HasFailed();
-	var resultValue = untypedResult.TryGetValue(out var intValue);
+    var resultValue = untypedResult.TryGetValue(out var intValue);	
+
+An example of mapping 
 
 ### Mapping functions 
 
-**OperationResult (Untyped)**
+#### When mapping the following *default* rules apply:
+1. The target result (this) must be Undefined or Successful. The mapping will not invoke if target is in a state of failure.
+2. The (source) mapFromResult must not be null or undefined.
 
-    OperationResult Map(OperationResult operationResult)
+#### When mapping 
+1. Copies state from source to target
+2. *May* copy value from source to target
 
--- to do
+#### OperationResult Mappings for untyped results
 
-    OperationResult Map<TMapType>(OperationResult<TMapType> operationResult)
+##### Map:
+Copies state and value. Returns an instance of source:
 
--- to do
+    OperationResult Map(OperationResult mapFromResult)
+    OperationResult Map<TMapType>(OperationResult<TMapType> mapFromResult)
 
-    OperationResult<TMapType> MapTo<TMapType>(OperationResult<TMapType> operationResult)
+##### MapTo:
+Copies state and value. Returns a **new** *typed* result instance:
 
--- to do
+    OperationResult<TMapType> MapTo<TMapType>(OperationResult<TMapType> mapFromResult)
 
-    Task<OperationResult> MapAsync(Func<Task<OperationResult>> mapAction)
+##### MapAsync:
+Copies state and value, mapAction will not invoke or mapping may not complete subject to default rules.
 
--- to do
+    Task<OperationResult> MapAsync(Func<Task<OperationResult>> mapFromResult)
 
 
-**OperationResult< TExpectedType > (Typed)**
 
-     new OperationResult<TExpectedValue> Map<TMapType>(OperationResult<TMapType> operationResult)
+#### Additional OperationResult Mappings for typed results
 
--- to do
+##### Map:
+As the operation result is constrained to a successful result type, this effects the login of the typed mapping operation. 
+|mapFrom state| types match? | operation |
+|--|--|--|
+|Undefined| n/a | none |
+|Success | yes | copy state and value |
+|Success | **no** | copy state, **ignore value** |
+|Failure | yes | copy state and value |
+|Failure | **no** | copy state and value |
+
+If *TExpectedValue* and *TMapType* match, value will be copied. 
+If TExpectedeValue and TMapType do not match, value will only be copied if the mapFromResult is failure. 
+
+     new OperationResult<TExpectedValue> Map<TMapType>(OperationResult<TMapType> mapFromResult)
+     
+##### MapConvert:
+This allows a mapping to convert the mapFromResult if the operation is successful
+     
+|mapFrom state| types match? | operation |
+|--|--|--|
+|Undefined| n/a | none |
+|Success | yes | copy state and invoke convertAction |
+|Success | **no** | copy state and invoke convertAction |
+|Failure | yes | copy state and value |
+|Failure | **no** | copy state and value |
 
     OperationResult<TExpectedValue> MapConvert<TNewSuccessValue>(
                 OperationResult<TNewSuccessValue> operationResult,
                 Func<TNewSuccessValue, TExpectedValue> convertAction)
--- to do
+
 
 ## Matching Operations
--- to do
+Calling the Match or MatchTo methods allow fluent queries against the state and stored value types of an OperationResult.
+
+The match operation returns a boolean value if a match has occurred within the matchAction:  
+
+      bool Match(Action<OperationResultMatch> matchAction)
+      bool Match(Action<OperationResultMatch<TExpectedValue>> matchAction)
+
+  
+ The matchTo operation returns a typed value that can be set within the matchAction:      
+ 
+
+    TMatchResult MatchTo<TMatchResult>(Action<OperationResultMatchTo<TMatchResult>> matchAction, TMatchResult defaultResult = default)
+    TMatchResult MatchTo<TMatchResult>(Action<OperationResultMatchTo<TExpectedValue, TMatchResult>> matchAction, TMatchResult defaultResult = default)
+
+ 
+Inside the respective Match and MatchTo methods, it is possible to query the OperationResult state and contained values using the TypeIs, StateIs and TypeAndStateAre methods.
+
+    OperationResultMatch TypeIs<TMatchType>(Action<TMatchType> matchAction
+	OperationResultMatch StateIs(OperationState operationState, Action<OperationResult> matchAction)
+	OperationResultMatch TypeAndStateAre<TMatchType>(OperationState operationState, Action<TMatchType> matchAction)
+
+#### Default :
+In additional to the various Type and State comparison methods, a Default method invokes a defaultAction delegate if the previous TypeIs, StateIs and TypeAndStateAre methods are not invoked.
+
+	OperationResultMatch Default(Action<OperationResult> defaultAction = default)
+
+#### Example:
+	var result = OperationResult.Undefined<UserModel>();
+	var response = result
+		.Map(await getUserById(userId)
+		.MatchTo<IActionResult>(m => m.
+	        .Match<UserModel>(
+	            value => m.Result = OK(value))
+	        .Match<int>(
+		        value => m.Result = new StatusCodeResult(value))
+	        .Default(
+	            res => response = new StatusCodeResult(500))
+        );
+    return response;
