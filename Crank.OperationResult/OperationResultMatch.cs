@@ -16,9 +16,22 @@ namespace Crank.OperationResult
             _operationResult = operationResult;
         }
 
-        public OperationResultMatch TypeIs<TMatchType>(Action<TMatchType> matchAction)
+        public OperationResultMatch ValueIs<TMatchType>(Action<TMatchType> matchAction)
         {
             var matchingResult = _operationResult.TryGetValue<TMatchType>(out var value);
+            if (matchingResult && matchAction != null)
+            {
+                _invoked = true;
+                matchAction?.Invoke(value);
+            }
+            return this;
+        }
+
+        public OperationResultMatch ValueIsEquals<TMatchType>(TMatchType expectedValue, Action<TMatchType> matchAction)
+        {
+            var matchingResult = _operationResult.TryGetValue<TMatchType>(out var value) &&
+                    (value == null && expectedValue == null) ||
+                    (value != null && value.Equals(expectedValue));
             if (matchingResult && matchAction != null)
             {
                 _invoked = true;
@@ -38,9 +51,9 @@ namespace Crank.OperationResult
             return this;
         }
 
-        public OperationResultMatch TypeAndStateAre<TMatchType>(OperationState operationState, Action<TMatchType> matchAction) =>
+        public OperationResultMatch ValueAndStateAre<TMatchType>(OperationState operationState, Action<TMatchType> matchAction) =>
             _operationResult.State == operationState
-                ? TypeIs(matchAction)
+                ? ValueIs(matchAction)
                 : this;
 
         public OperationResultMatch ValueIsUndefined(Action<OperationResult> matchAction)
@@ -82,7 +95,7 @@ namespace Crank.OperationResult
             _typedOperationResult = operationResult;
         }
 
-        public OperationResultMatch Match(OperationState operationState, Action<OperationResult<TExpectedValue>> matchAction)
+        public OperationResultMatch StateIs(OperationState operationState, Action<OperationResult<TExpectedValue>> matchAction)
         {
             var matchingResult = _operationResult.State == operationState;
             if (matchingResult && matchAction != null)
@@ -119,7 +132,7 @@ namespace Crank.OperationResult
             Result = defaultValue;
         }
 
-        public OperationResultMatch Match(OperationState operationState, Action<OperationResult<TExpectedValue>> matchAction)
+        public OperationResultMatch StateIs(OperationState operationState, Action<OperationResult<TExpectedValue>> matchAction)
         {
             var matchingResult = _operationResult.State == operationState;
             if (matchingResult && matchAction != null)
