@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Crank.OperationResult.Tests
@@ -302,7 +303,6 @@ namespace Crank.OperationResult.Tests
             Assert.True(undefinedResult.ValueIsUndefined);
             Assert.Equal("456", copyOfFailedResult.Value);
         }
-
 
     }
 }

@@ -525,6 +525,43 @@ namespace Crank.OperationResult.Tests
         }
 
         [Fact]
+        public void WhenMatchingToAnOperationResultWithADefault_AndNoMatchsOccurs_ReturnTheValueFromDefault()
+        {
+            //given
+            var guidValue = Guid.NewGuid();
+            var result = OperationResult.Succeeded<Guid>(guidValue);
+
+            //when
+            var stringResult =
+                result.MatchTo<string>(m => m
+                    .ValueIs<string>(value => m.Result = value)
+                    .ValueIs<int>(value => m.Result = $"{value}")
+                    .Default(value => m.Result = $"{guidValue}")
+                );                
+            //then
+            Assert.Equal($"{guidValue}", stringResult);
+        }
+
+        [Fact]
+        public void WhenMatchingToAnOperationResultWithADefault_AndDefaultValue_TheDefaultShouldOverrideTheDefaultValue()
+        {
+            //given
+            var guidValue = Guid.NewGuid();
+            var result = OperationResult.Succeeded<Guid>(guidValue);
+
+            //when
+            var stringResult =
+                result.MatchTo<string>(m => m
+                    .ValueIs<string>(value => m.Result = value)
+                    .ValueIs<int>(value => m.Result = $"{value}")
+                    .Default(value => m.Result = $"{guidValue}"),
+                $"{Guid.Empty}"
+                );
+            //then
+            Assert.Equal($"{guidValue}", stringResult);
+        }
+
+        [Fact]
         public void WhenMatchingToAnOperationResult_IfNoMatchsOccur_ReturnTheDefaultValue()
         {
             //given
@@ -540,6 +577,26 @@ namespace Crank.OperationResult.Tests
 
             //then
             Assert.Equal($"{guidValue}", stringResult);
+        }
+
+        [Fact]
+        public void WhenMatchingToAnOperationResult_IfTheInternalValueIsUndefined_ValueIsUndefinedShouldBeCalled()
+        {
+            //given
+            var result = OperationResult.Undefined<Guid>();
+            result.Success();
+
+            //when
+            var stringResult =
+                result.MatchTo<string>(m => m
+                    .ValueIs<string>(value => m.Result = value)
+                    .ValueIs<int>(value => m.Result = $"{value}")
+                    .ValueIs<Guid>(value => m.Result = $"{Guid.NewGuid()}")
+                    .ValueIsUndefined(value => m.Result = "undefined")
+                );
+
+            //then
+            Assert.Equal("undefined", stringResult);
         }
 
     }
