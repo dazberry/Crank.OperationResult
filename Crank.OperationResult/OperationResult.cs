@@ -22,9 +22,12 @@ namespace Crank.OperationResult
 
         public OperationState State { get; protected set; } = OperationState.Undefined;
 
-        public OperationResult() { }
+        public OperationResult(Action<OperationResultOptions> optionsAction = default) =>
+            optionsAction?.Invoke(Options);
 
-        public static OperationResult Undefined() => new OperationResult();
+        public static OperationResult Undefined(Action<OperationResultOptions> optionsAction = default) =>
+            new OperationResult(optionsAction);
+
         public static OperationResult<TType> Undefined<TType>() => new OperationResult<TType>();
 
         public static OperationResult Succeeded() => new OperationResult().Success();
