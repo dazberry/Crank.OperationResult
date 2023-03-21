@@ -5,6 +5,8 @@
     public class OperationResultOptions
     {
         public OperationResultTypeChecking ExpectedResultTypeChecking { get; set; }
+
+        public bool MapIfSourceResultIsInStateOfFailure { get; set; }
     }
 
 }

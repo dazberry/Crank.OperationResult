@@ -8,6 +8,18 @@ namespace Crank.OperationResult
 
     public class OperationResult
     {
+        public readonly OperationResultOptions Options = new OperationResultOptions()
+        {
+            ExpectedResultTypeChecking = OperationResultTypeChecking.Strict,
+            MapIfSourceResultIsInStateOfFailure = false
+        };
+
+        public OperationResult SetOptions(Action<OperationResultOptions> optionsAction)
+        {
+            optionsAction?.Invoke(Options);
+            return this;
+        }
+
         public OperationState State { get; protected set; } = OperationState.Undefined;
 
         public OperationResult() { }
@@ -88,9 +100,12 @@ namespace Crank.OperationResult
             return this;
         }
 
+        protected bool StopMappingOnFailedState =>
+            HasFailed && Options.MapIfSourceResultIsInStateOfFailure == false;
+
         public OperationResult Map(OperationResult mapFromResult)
         {
-            if (HasFailed || (mapFromResult?.IsUndefined ?? true))
+            if (StopMappingOnFailedState || (mapFromResult?.IsUndefined ?? true))
                 return this;
 
             CopyFrom(mapFromResult);
@@ -104,7 +119,7 @@ namespace Crank.OperationResult
 
         public OperationResult<TMapType> MapTo<TMapType>(OperationResult<TMapType> mapFromResult)
         {
-            if (HasFailed || (mapFromResult?.IsUndefined ?? true))
+            if (StopMappingOnFailedState || (mapFromResult?.IsUndefined ?? true))
                 return new OperationResult<TMapType>(this);
 
             CopyFrom(mapFromResult);
@@ -113,16 +128,18 @@ namespace Crank.OperationResult
 
         public OperationResult Map(Func<OperationResult> mapFromAction)
         {
-            if (!HasFailed && mapFromAction != null)
-                return Map(mapFromAction.Invoke());
-            return this;
+            if (StopMappingOnFailedState || mapFromAction == null)
+                return this;
+
+            return Map(mapFromAction.Invoke());
         }
 
         public async Task<OperationResult> MapAsync(Func<Task<OperationResult>> mapFromActionAsync)
         {
-            if (!HasFailed && mapFromActionAsync != null)
-                return Map(await mapFromActionAsync.Invoke());
-            return this;
+            if (StopMappingOnFailedState && mapFromActionAsync == null)
+                return this;
+
+            return Map(await mapFromActionAsync.Invoke());
         }
 
         public bool Match(Action<OperationResultMatch> matchAction)
@@ -149,12 +166,7 @@ namespace Crank.OperationResult
 
         public bool ValueIsUndefined => _genericValue == _undefinedValue;
 
-        public readonly OperationResultOptions Options = new OperationResultOptions()
-        {
-            ExpectedResultTypeChecking = OperationResultTypeChecking.Strict
-        };
-
-        public OperationResult<TExpectedValue> SetOptions(Action<OperationResultOptions> optionsAction)
+        public new OperationResult<TExpectedValue> SetOptions(Action<OperationResultOptions> optionsAction)
         {
             optionsAction?.Invoke(Options);
             return this;
@@ -216,10 +228,10 @@ namespace Crank.OperationResult
 
         public new OperationResult<TExpectedValue> Map<TMapType>(OperationResult<TMapType> mapFromResult)
         {
-            if (this.HasFailed || mapFromResult.IsUndefined)
+            if (this.StopMappingOnFailedState || mapFromResult.IsUndefined)
                 return this;
 
-            if (typeof(TExpectedValue) == typeof(TMapType) || mapFromResult.HasFailed)
+            if (typeof(TExpectedValue) == typeof(TMapType) || mapFromResult.StopMappingOnFailedState)
             {
                 CopyFrom(mapFromResult);
                 return this;
@@ -233,7 +245,7 @@ namespace Crank.OperationResult
             OperationResult<TNewSuccessValue> mapFromResult,
             Func<TNewSuccessValue, TExpectedValue> convertAction)
         {
-            if (this.HasFailed || mapFromResult.IsUndefined)
+            if (this.StopMappingOnFailedState || mapFromResult.IsUndefined)
                 return this;
 
             if (mapFromResult.HasSucceeded)

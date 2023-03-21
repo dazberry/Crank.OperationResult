@@ -91,7 +91,7 @@ namespace Crank.OperationResult.Tests
         }
 
         [Fact]
-        public void WhenMappingResult_CallingMapForAFailedResult_ShouldNotUpdateTheResultOrValue()
+        public void WhenMappingResults_CallingMapForAFailedResult_ShouldNotUpdateTheResultOrValue()
         {
             //given
             var firstResult = OperationResult.Failed();
@@ -107,6 +107,29 @@ namespace Crank.OperationResult.Tests
             Assert.Equal(OperationState.Failure, firstResult.State);
             Assert.Equal(OperationState.Failure, copyOfFirstResult.State);
             Assert.Equal(OperationState.Success, secondResult.State);
+        }
+
+        [Fact]
+        public void WhenMappingResults_CallingMapForAFailedResultWithFlagSet_ShouldUpdateTheResultAndValue()
+        {
+            //given
+            var firstResult = OperationResult
+                .Failed()
+                .SetOptions(opt => opt.MapIfSourceResultIsInStateOfFailure = true);
+            var secondResult = OperationResult.Succeeded("123");
+
+            //when
+            var copyOfFirstResult = firstResult.Map(secondResult);
+
+            //then
+            Assert.NotEqual(firstResult, secondResult);
+            Assert.Equal(firstResult, copyOfFirstResult);
+            Assert.Equal(firstResult.State, secondResult.State);
+            Assert.Equal(OperationState.Success, firstResult.State);
+            Assert.Equal(OperationState.Success, copyOfFirstResult.State);
+            Assert.Equal(OperationState.Success, secondResult.State);
+            Assert.True(firstResult.TryGetValue<string>(out var stringValue));
+            Assert.Equal("123", stringValue);
         }
 
         [Fact]
@@ -216,7 +239,7 @@ namespace Crank.OperationResult.Tests
         }
 
         [Fact]
-        public void WhenMappingToAFailedResult_TheMappingIsIgnored()
+        public void WhenMappingToAFailedResult_WithDefaultFlags_TheMappingIsIgnored()
         {
             //given
             var failedResult = OperationResult.Failed("456");
@@ -234,6 +257,29 @@ namespace Crank.OperationResult.Tests
             Assert.Equal("456", failedResult.Value);
             Assert.Equal("123", successResult.Value);
             Assert.Equal("456", copyOfFailedResult.Value);
+        }
+
+        [Fact]
+        public void WhenMappingToAFailedResult_WithMapIfFlagSet_TheMappingIsApplied()
+        {
+            //given
+            var failedResult = OperationResult
+                .Failed("456")
+                .SetOptions(opt => opt.MapIfSourceResultIsInStateOfFailure = true);
+            var successResult = OperationResult.Succeeded("123");
+
+            //when
+            var copyOfFailedResult = failedResult.Map(successResult);
+
+            //then
+            Assert.Equal(OperationState.Success, failedResult.State);
+            Assert.Equal(OperationState.Success, successResult.State);
+            Assert.Equal(OperationState.Success, copyOfFailedResult.State);
+
+            Assert.Equal(copyOfFailedResult, failedResult);
+            Assert.Equal("123", failedResult.Value);
+            Assert.Equal("123", successResult.Value);
+            Assert.Equal("123", copyOfFailedResult.Value);
         }
 
         [Fact]
