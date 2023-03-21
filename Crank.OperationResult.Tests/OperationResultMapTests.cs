@@ -304,5 +304,20 @@ namespace Crank.OperationResult.Tests
             Assert.Equal("456", copyOfFailedResult.Value);
         }
 
+        [Fact]
+        void WhenMappingUntypedToTypedResult_IfSuccessAndTheTypesMatch_BothStateAndValueShouldBeCopied()
+        {
+            //given
+            var typedResult = OperationResult.Undefined<string>();
+            var untypedResult = OperationResult.Undefined().Success("123");
+
+            //when
+            var copyOfTypedResult = typedResult.Map(untypedResult);
+
+            //then
+            Assert.Equal(copyOfTypedResult, typedResult);
+            Assert.Equal("123", typedResult.Value);
+        }
+
     }
 }

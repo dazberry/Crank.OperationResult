@@ -15,6 +15,9 @@ namespace Crank.OperationResult
 
         IGenericValue ChangeValue<TType>(TType value) =>
             new GenericValue<TType>(value);
+
+        Type GetValueType() =>
+            null;
     }
 
     public class UndefinedGenericValue : IGenericValue
@@ -66,6 +69,9 @@ namespace Crank.OperationResult
         }
 
         public bool IsUndefined => false;
+
+        public Type GetValueType() =>
+            typeof(TValue);
     }
 
 }

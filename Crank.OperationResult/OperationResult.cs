@@ -231,13 +231,34 @@ namespace Crank.OperationResult
             if (this.StopMappingOnFailedState || mapFromResult.IsUndefined)
                 return this;
 
-            if (typeof(TExpectedValue) == typeof(TMapType) || mapFromResult.StopMappingOnFailedState)
+            if (mapFromResult.HasSucceeded)
             {
-                CopyFrom(mapFromResult);
-                return this;
+                if (typeof(TExpectedValue) != typeof(TMapType))
+                {
+                    Update(mapFromResult.State);
+                    return this;
+                }
             }
 
-            Update(mapFromResult.State);
+            CopyFrom(mapFromResult);
+            return this;
+        }
+
+        public new OperationResult<TExpectedValue> Map(OperationResult mapFromResult)
+        {
+            if (this.StopMappingOnFailedState || mapFromResult.IsUndefined)
+                return this;
+
+            if (mapFromResult.HasSucceeded)
+            {
+                if (typeof(TExpectedValue) != mapFromResult.Value.GetValueType())
+                {
+                    Update(mapFromResult.State);
+                    return this;
+                }
+            }
+
+            CopyFrom(mapFromResult);
             return this;
         }
 
@@ -262,7 +283,6 @@ namespace Crank.OperationResult
             CopyFrom(mapFromResult);
             return this;
         }
-
 
         public bool Match(Action<OperationResultMatch<TExpectedValue>> matchAction)
         {
