@@ -1,6 +1,7 @@
 
 
 
+
 # Crank.OperationResult
 
 **crank**
@@ -222,38 +223,64 @@ Calling the Match or MatchTo methods allow fluent queries against the state and 
 
 The match operation returns a boolean value if a match has occurred within the matchAction:  
 
-      bool Match(Action<OperationResultMatch> matchAction)
-      bool Match(Action<OperationResultMatch<TExpectedValue>> matchAction)
+    bool Match(Action<OperationResultMatch<TExpectedValue>> matchAction)
 
   
  The matchTo operation returns a typed value that can be set within the matchAction:      
- 
 
-    TMatchResult MatchTo<TMatchResult>(Action<OperationResultMatchTo<TMatchResult>> matchAction, TMatchResult defaultResult = default)
     TMatchResult MatchTo<TMatchResult>(Action<OperationResultMatchTo<TExpectedValue, TMatchResult>> matchAction, TMatchResult defaultResult = default)
-
  
-Inside the respective Match and MatchTo methods, it is possible to query the OperationResult state and contained values using the TypeIs, StateIs and TypeAndStateAre methods.
+Inside the respective Match and MatchTo methods, it is possible to query the OperationResult state and contained values using the ValueIs, ValueIsEqual, ValueAndStateAre and ValueIsUndefined:
 
-    OperationResultMatch TypeIs<TMatchType>(Action<TMatchType> matchAction
-	OperationResultMatch StateIs(OperationState operationState, Action<OperationResult> matchAction)
-	OperationResultMatch TypeAndStateAre<TMatchType>(OperationState operationState, Action<TMatchType> matchAction)
+#### ValueIs and ValueIsEqual:
+Invoke based on value type and optionally an expected value of that type.
 
-#### Default :
-In additional to the various Type and State comparison methods, a Default method invokes a defaultAction delegate if the previous TypeIs, StateIs and TypeAndStateAre methods are not invoked.
+    OperationResultMatch ValueIs<TMatchType>(Action<TMatchType> matchAction)
+    OperationResultMatch ValueIsEquals<TMatchType>(TMatchType expectedValue, Action<TMatchType> matchAction)
 
-	OperationResultMatch Default(Action<OperationResult> defaultAction = default)
+#### StateIs:
+Invoke based on the *OperationResult* state.
 
-#### Example:
-	var result = OperationResult.Undefined<UserModel>();
-	var response = result
-		.Map(await getUserById(userId)
-		.MatchTo<IActionResult>(m => m.
-	        .Match<UserModel>(
-	            value => m.Result = OK(value))
-	        .Match<int>(
-		        value => m.Result = new StatusCodeResult(value))
-	        .Default(
-	            res => response = new StatusCodeResult(500))
+    OperationResultMatch StateIs(OperationState operationState, Action<OperationResult> matchAction)
+
+#### ValueAndStateAre:
+Invoke based on both the *OperationResult* state and the type of value.
+
+    OperationResultMatch ValueAndStateAre<TMatchType>(OperationState operationState, Action<TMatchType> matchAction)
+
+#### ValueIsUndefined:
+In an *OperationResult*  the value is flagged as being undefined (regardless of the type and default value) if no value has been set, or a value was removed as part of a *Map* or *Set* operation. These methods are invoked based on that value flag.
+
+    OperationResultMatch ValueIsUndefined(Action<OperationResult> matchAction)
+    OperationResultMatch ValueIsUndefined(OperationState operationState, Action<OperationResult> matchAction)
+
+#### Default:
+The state machine behind the Match functions (*OperationResultMatch*) tracks whether an other Match functions are invoked. If a *Default* match is included, it will not invoked if any previous Matches have invoked.
+    
+    OperationResultMatch Default(Action<OperationResult> defaultAction = default)
+
+#### Examples:	
+    var result = OperationResult.Undefined<UserModel>();
+    IActionResult response = null;
+    result.Map(await getUserById(userId))
+        .MatchTo<IActionResult>(m => m.
+            .ValueIs<UserModel>(
+                value => response = OK(value))
+            .ValueIs<int>(
+                value => response = new StatusCodeResult(value))
+            .Default(
+                res => response = new StatusCodeResult(500))
+        );
+    return response;
+
+    var response = OperationResult.Undefined<UserModel>()
+        .Map(await getUserById(userId))
+        .MatchTo<IActionResult>(m => m.
+            .ValueIs<UserModel>(
+                value => m.Result = OK(value))
+            .ValueIs<int>(
+                value => m.Result = new StatusCodeResult(value))
+            .Default(
+                res => m.Result = new StatusCodeResult(500))
         );
     return response;
