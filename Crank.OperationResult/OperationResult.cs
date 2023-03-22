@@ -52,10 +52,20 @@ namespace Crank.OperationResult
         public bool HasSucceeded => State == OperationState.Success;
         public bool HasFailed => State == OperationState.Failure;
 
-        protected void CopyFrom(OperationResult operationResult)
+
+        public string Message { get; protected set; }
+
+        public OperationResult WithMessage(string message)
+        {
+            Message = message;
+            return this;
+        }
+
+        protected void CopyFrom(OperationResult operationResult, bool copyValue = true)
         {
             State = operationResult.State;
-            _genericValue = operationResult._genericValue;
+            Message = operationResult.Message;
+            _genericValue = copyValue ? operationResult._genericValue : _genericValue;
         }
 
         protected void Update(OperationState state, IGenericValue genericValue = null)
@@ -185,6 +195,12 @@ namespace Crank.OperationResult
             Update(operationResult.State, operationResult.Value);
         }
 
+        public new OperationResult<TExpectedValue> WithMessage(string message)
+        {
+            Message = message;
+            return this;
+        }
+
         public OperationResult<TExpectedValue> Success(TExpectedValue successValue)
         {
             Update(OperationState.Success, _genericValue.ChangeValue(successValue));
@@ -238,7 +254,7 @@ namespace Crank.OperationResult
             {
                 if (typeof(TExpectedValue) != typeof(TMapType))
                 {
-                    Update(mapFromResult.State);
+                    CopyFrom(mapFromResult, false);
                     return this;
                 }
             }
@@ -256,7 +272,7 @@ namespace Crank.OperationResult
             {
                 if (typeof(TExpectedValue) != mapFromResult.Value.GetValueType())
                 {
-                    Update(mapFromResult.State);
+                    CopyFrom(mapFromResult, false);
                     return this;
                 }
             }
@@ -276,9 +292,16 @@ namespace Crank.OperationResult
             {
                 if (convertAction != null)
                 {
-                    mapFromResult._genericValue.TryGetValue<TNewSuccessValue>(out var newSuccessValue);
-                    return Success(convertAction.Invoke(newSuccessValue));
+                    var haveValue = mapFromResult._genericValue.TryGetValue<TNewSuccessValue>(out var newSuccessValue);
+                    if (haveValue)
+                    {
+                        var convertedResult = convertAction.Invoke(newSuccessValue);
+                        Success(convertedResult);
+                        Message = mapFromResult.Message;
+                        return this;
+                    }
                 }
+
                 Success();
                 return this;
             }
