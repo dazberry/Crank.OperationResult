@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Collections.Generic;
+using Xunit;
 
 namespace Crank.OperationResult.Tests
 {
@@ -70,6 +71,36 @@ namespace Crank.OperationResult.Tests
             Assert.False(newValue.TryGetValue<string>(out var _));
             Assert.True(newValue.TryGetValue<int>(out var newIntValue));
             Assert.Equal(456, newIntValue);
+        }
+
+        [Fact]
+        public void GivenValuesOfDifferentTypes_InvokingTryGet_ShouldFail()
+        {
+            //given
+            var dict = new Dictionary<int, string>();
+            IGenericValue value = new GenericValue<Dictionary<int, string>>(dict);
+
+            //when
+            var result = value.TryGetValue<List<string>>(out var listValue);
+
+            //then
+            Assert.False(result);
+            Assert.Null(listValue);
+        }
+
+        [Fact]
+        public void GivenValuesOfTheSameTypeThatAreNotIConvertible_InvokingTryGet_ShouldSucceed()
+        {
+            //given
+            var originalListValue = new List<string>();
+            IGenericValue value = new GenericValue<List<string>>(originalListValue);
+
+            //when
+            var result = value.TryGetValue<List<string>>(out var newListValue);
+
+            //then
+            Assert.True(result);
+            Assert.Equal(originalListValue, newListValue);
         }
 
     }

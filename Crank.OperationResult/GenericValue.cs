@@ -39,27 +39,36 @@ namespace Crank.OperationResult
             Value = value;
         }
 
-        public bool TryGetValue<TType>(out TType value)
+        private bool TryConvert<TSource, TDestination>(TSource source, out TDestination destination)
         {
-            if (typeof(TValue) == typeof(TType))
+            if (typeof(TSource) == typeof(TDestination))
             {
-                value = (TType)Convert.ChangeType(Value, typeof(TType));
-                return true;
-            };
-            value = default;
+                try
+                {
+                    destination = source is IConvertible
+                        ? destination = (TDestination)Convert.ChangeType(source, typeof(TDestination))
+                        : destination = (TDestination)(object)source;
+                    return true;
+                }
+                catch
+                {
+                }
+            }
+
+            destination = default;
             return false;
         }
+
+        public bool TryGetValue<TType>(out TType value) =>
+            TryConvert(Value, out value);
 
         private bool TrySetValue<TType>(TType value)
         {
-            if (typeof(TValue) == typeof(TType))
-            {
-                Value = (TValue)Convert.ChangeType(value, typeof(TValue));
-                return true;
-            }
-            return false;
+            var result = TryConvert<TType, TValue>(value, out var convertedValue);
+            if (result)
+                Value = convertedValue;
+            return result;
         }
-
         public IGenericValue ChangeValue<TType>(TType value)
         {
             if (TrySetValue(value))
