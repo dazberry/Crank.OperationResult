@@ -8,6 +8,8 @@
     <Product>Darren Davis</Product>
     <PackageProjectUrl>https://github.com/dazberry/Crank.OperationResult</PackageProjectUrl>
     <Description>**Crank.OperationResult** is a C# implementation (of sorts) of a discriminated union allowing different response values wrapped in one response class.</Description>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
 </Project>
