@@ -1,3 +1,5 @@
+using Crank.OperationResult.Tests.Models;
+using System;
 using Xunit;
 
 namespace Crank.OperationResult.Tests
@@ -156,5 +158,35 @@ namespace Crank.OperationResult.Tests
             Assert.Equal("123", unTypedResult2Value);
         }
 
+        [Fact]
+        public void GivenAResult_CallingTryGetResult_ShouldReturnValue()
+        {
+            //given
+            var instance = new ChildRecordClass<Guid>()
+            {
+                AnIntValue = 1,
+                AStringValue = "2",
+                GenericValue = Guid.NewGuid()
+            };
+            var result = OperationResult.Succeeded(instance);
+
+            //when
+            var if1Result = result.TryGetValue(out IRecordClass1 recordClass1);
+            var if2Result = result.TryGetValue(out IRecordClass2 recordClass2);
+            var instance1 = (ChildRecordClass<Guid>)recordClass1;
+            var instance2 = (ChildRecordClass<Guid>)recordClass2;
+
+            //then
+            Assert.True(if1Result);
+            Assert.NotNull(recordClass1);
+            Assert.Equal("2", recordClass1.AStringValue);
+
+            Assert.True(if2Result);
+            Assert.NotNull(recordClass2);
+            Assert.Equal(1, recordClass2.AnIntValue);
+
+            Assert.NotNull(instance1);
+            Assert.NotNull(instance2);
+        }
     }
 }

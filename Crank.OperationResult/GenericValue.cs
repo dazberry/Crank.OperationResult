@@ -41,6 +41,12 @@ namespace Crank.OperationResult
 
         private bool TryConvert<TSource, TDestination>(TSource source, out TDestination destination)
         {
+            if (source is TDestination)
+            {
+                destination = (TDestination)(object)source;
+                return true;
+            }
+
             if (typeof(TSource) == typeof(TDestination))
             {
                 try
