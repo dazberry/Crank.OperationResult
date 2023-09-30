@@ -149,7 +149,7 @@ namespace Crank.OperationResult
 
         public async Task<OperationResult> MapAsync(Func<Task<OperationResult>> mapFromActionAsync)
         {
-            if (StopMappingOnFailedState && mapFromActionAsync == null)
+            if (StopMappingOnFailedState || mapFromActionAsync == null)
                 return this;
 
             return Map(await mapFromActionAsync.Invoke());
