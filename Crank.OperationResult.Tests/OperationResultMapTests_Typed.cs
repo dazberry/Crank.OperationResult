@@ -8,10 +8,13 @@ namespace Crank.OperationResult.Tests
     public class OperationResultMapTests_Typed
     {
         [Fact]
-        public void WhenMappingDifferentTypes_AndTheStateIsSuccess_StateIsCopiedButValueBecomesUndefined()
+        public void WhenMappingDifferentTypes_AndTheStateIsSuccess_StateAndValueAreCopied()
         {
-            //given
-            var firstResult = OperationResult.Undefined<int>();
+			//given
+			OperationResultsGlobalSettings.LegacyTypedMapCopyValue = false;
+
+			//given
+			var firstResult = OperationResult.Undefined<int>();
             var secondResult = OperationResult.Succeeded("123");
 
             //when
@@ -24,14 +27,46 @@ namespace Crank.OperationResult.Tests
 
 
             Assert.Equal(default, firstResult.Value);
-            Assert.True(firstResult.ValueIsUndefined);
+            Assert.False(firstResult.ValueIsUndefined);
             Assert.Equal("123", secondResult.Value);
             Assert.Equal(firstResult, newResult);
-            Assert.Equal(default, newResult.Value);
-            Assert.True(newResult.ValueIsUndefined);
+
+            Assert.False(newResult.TryGetValue(out int _));
+            Assert.True(newResult.TryGetValue(out string newResultValue));
+            Assert.Equal(secondResult.Value, newResultValue);
+
+			// different typed value is returned as default however value is defined
+			Assert.Equal(default, newResult.Value);
+            Assert.False(newResult.ValueIsUndefined);
         }
 
         [Fact]
+		public void WhenMappingDifferentTypes_AndTheStateIsSuccess_OnlyStateIsCopiedIfLegacyGlobalSettingIsTrue()
+		{
+            //given
+            OperationResultsGlobalSettings.LegacyTypedMapCopyValue = true;
+
+			var firstResult = OperationResult.Undefined<int>();
+			var secondResult = OperationResult.Succeeded("123");
+
+			//when
+			var newResult = firstResult.Map(secondResult);
+
+			//then
+			Assert.Equal(OperationState.Success, firstResult.State);
+			Assert.Equal(OperationState.Success, secondResult.State);
+			Assert.Equal(OperationState.Success, newResult.State);
+
+
+			Assert.Equal(default, firstResult.Value);
+			Assert.True(firstResult.ValueIsUndefined);
+			Assert.Equal("123", secondResult.Value);
+			Assert.Equal(firstResult, newResult);
+			Assert.Equal(default, newResult.Value);
+			Assert.True(newResult.ValueIsUndefined);
+		}
+
+		[Fact]
         public void WhenMappingTypedResultsOfTheSameType_TheMappingResult_ShouldBeTheSame()
         {
             //given

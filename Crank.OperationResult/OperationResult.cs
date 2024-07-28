@@ -4,6 +4,11 @@ using System.Threading.Tasks;
 namespace Crank.OperationResult
 {
 
+    public static class OperationResultsGlobalSettings
+    {
+        public static bool LegacyTypedMapCopyValue { get; set; } = false;
+    }
+
     public enum OperationState { Undefined, Success, Failure };
 
     public class OperationResult
@@ -254,7 +259,9 @@ namespace Crank.OperationResult
             {
                 if (typeof(TExpectedValue) != typeof(TMapType))
                 {
-                    CopyFrom(mapFromResult, false);
+                    bool copyValue = OperationResultsGlobalSettings.LegacyTypedMapCopyValue == false;
+
+					CopyFrom(mapFromResult, copyValue);
                     return this;
                 }
             }
@@ -272,7 +279,9 @@ namespace Crank.OperationResult
             {
                 if (typeof(TExpectedValue) != mapFromResult.Value.GetValueType())
                 {
-                    CopyFrom(mapFromResult, false);
+					bool copyValue = OperationResultsGlobalSettings.LegacyTypedMapCopyValue == false;
+
+					CopyFrom(mapFromResult, copyValue);
                     return this;
                 }
             }
